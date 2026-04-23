@@ -176,25 +176,27 @@ p.body{font-size:clamp(11px,1.3vw,15px);color:var(--text2);line-height:1.65}
     <div class="thumb" data-slide="1"><span class="thumb-num">02</span><span>Agenda</span></div>
     <div class="thumb" data-slide="2"><span class="thumb-num">03</span><span>Sección 01</span></div>
     <div class="thumb" data-slide="3"><span class="thumb-num">04</span><span>¿Qué es VMware?</span></div>
-    <div class="thumb" data-slide="4"><span class="thumb-num">05</span><span>Evolución NSX</span></div>
-    <div class="thumb" data-slide="5"><span class="thumb-num">06</span><span>Virtualización de Red</span></div>
-    <div class="thumb" data-slide="6"><span class="thumb-num">07</span><span>Tráfico N-S vs E-O</span></div>
-    <div class="thumb" data-slide="7"><span class="thumb-num">08</span><span>Video introductorio</span></div>
+    <div class="thumb" data-slide="4"><span class="thumb-num">04b</span><span>Virtualización Servidores</span></div>
+    <div class="thumb" data-slide="5"><span class="thumb-num">05</span><span>Evolución NSX</span></div>
+    <div class="thumb" data-slide="6"><span class="thumb-num">05b</span><span>Arquitectura NSX-T</span></div>
+    <div class="thumb" data-slide="7"><span class="thumb-num">06</span><span>Virtualización de Red</span></div>
+    <div class="thumb" data-slide="8"><span class="thumb-num">07</span><span>Tráfico N-S vs E-O</span></div>
+    <div class="thumb" data-slide="9"><span class="thumb-num">08</span><span>Video introductorio</span></div>
     <div class="sidebar-section">Expositor 2 · ~22 min</div>
-    <div class="thumb" data-slide="8"><span class="thumb-num">09</span><span>Sección 02</span></div>
-    <div class="thumb" data-slide="9"><span class="thumb-num">10</span><span>Arquitectura NSX</span></div>
-    <div class="thumb" data-slide="10"><span class="thumb-num">11</span><span>DFW — Guardián por VM</span></div>
-    <div class="thumb" data-slide="11"><span class="thumb-num">12</span><span>Microsegmentación</span></div>
-    <div class="thumb" data-slide="12"><span class="thumb-num">13</span><span>Zero Trust</span></div>
-    <div class="thumb" data-slide="13"><span class="thumb-num">14</span><span>Políticas NSX Manager</span></div>
+    <div class="thumb" data-slide="10"><span class="thumb-num">09</span><span>Sección 02</span></div>
+    <div class="thumb" data-slide="11"><span class="thumb-num">10</span><span>Arquitectura NSX</span></div>
+    <div class="thumb" data-slide="12"><span class="thumb-num">11</span><span>DFW — Guardián por VM</span></div>
+    <div class="thumb" data-slide="13"><span class="thumb-num">12</span><span>Microsegmentación</span></div>
+    <div class="thumb" data-slide="14"><span class="thumb-num">13</span><span>Zero Trust</span></div>
+    <div class="thumb" data-slide="15"><span class="thumb-num">14</span><span>Políticas NSX Manager</span></div>
     <div class="sidebar-section">Expositor 3 · ~20 min</div>
-    <div class="thumb" data-slide="14"><span class="thumb-num">15</span><span>Sección 03</span></div>
-    <div class="thumb" data-slide="15"><span class="thumb-num">16</span><span>Caso: Ransomware</span></div>
-    <div class="thumb" data-slide="16"><span class="thumb-num">17</span><span>App 3 Capas</span></div>
-    <div class="thumb" data-slide="17"><span class="thumb-num">18</span><span>Comparativa</span></div>
-    <div class="thumb" data-slide="18"><span class="thumb-num">19</span><span>Adopción Industria</span></div>
-    <div class="thumb" data-slide="19"><span class="thumb-num">20</span><span>Glosario</span></div>
-    <div class="thumb" data-slide="20"><span class="thumb-num">21</span><span>Conclusiones</span></div>
+    <div class="thumb" data-slide="16"><span class="thumb-num">15</span><span>Sección 03</span></div>
+    <div class="thumb" data-slide="17"><span class="thumb-num">16</span><span>Caso: Ransomware</span></div>
+    <div class="thumb" data-slide="18"><span class="thumb-num">17</span><span>App 3 Capas</span></div>
+    <div class="thumb" data-slide="19"><span class="thumb-num">18</span><span>Comparativa</span></div>
+    <div class="thumb" data-slide="20"><span class="thumb-num">19</span><span>Adopción Industria</span></div>
+    <div class="thumb" data-slide="21"><span class="thumb-num">20</span><span>Glosario</span></div>
+    <div class="thumb" data-slide="22"><span class="thumb-num">21</span><span>Conclusiones</span></div>
   </div>
 
   <!-- STAGE -->
@@ -288,6 +290,23 @@ p.body{font-size:clamp(11px,1.3vw,15px);color:var(--text2);line-height:1.65}
       <div class="slide-footer"><span>¿Qué es VMware? — Historia y Portafolio</span><span class="exp-badge exp1">EXP 01</span></div>
     </div>
 
+    <!-- SLIDE 04b · VIRTUALIZACIÓN DE SERVIDORES (imagen) -->
+    <div class="slide">
+      <div class="slide-inner pad-sm" style="padding:20px 32px">
+        <div class="slide-tag">Contexto — Virtualización de Servidores</div>
+        <h2 class="title" style="margin-bottom:10px">De servidores físicos a máquinas virtuales</h2>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0">
+          <img src="word-image-38.png"
+               alt="Diagrama de virtualización de servidores"
+               style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid var(--border)">
+        </div>
+        <p class="body" style="margin-top:8px;text-align:center;font-size:clamp(9px,1vw,12px)">
+          Un hipervisor permite correr múltiples VMs sobre un mismo servidor físico — base de todo el stack VMware.
+        </p>
+      </div>
+      <div class="slide-footer"><span>Virtualización de Servidores — Contexto</span><span class="exp-badge exp1">EXP 01</span></div>
+    </div>
+
     <!-- SLIDE 05 · EVOLUCIÓN NSX -->
     <div class="slide">
       <div class="slide-inner pad-sm">
@@ -319,6 +338,23 @@ p.body{font-size:clamp(11px,1.3vw,15px);color:var(--text2);line-height:1.65}
         <div class="quote-block" style="margin-top:14px">La versión actual se llama <span class="hl">NSX</span>. El componente DFW fue rebautizado como <span class="hl-green">VMware vDefend</span> tras la adquisición de Broadcom en 2023.</div>
       </div>
       <div class="slide-footer"><span>Evolución NSX-V → NSX-T → NSX</span><span class="exp-badge exp1">EXP 01</span></div>
+    </div>
+
+    <!-- SLIDE 05b · ARQUITECTURA NSX-T (imagen) -->
+    <div class="slide">
+      <div class="slide-inner pad-sm" style="padding:20px 32px">
+        <div class="slide-tag">Arquitectura General</div>
+        <h2 class="title" style="margin-bottom:10px">NSX-T — Arquitectura y Componentes</h2>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0">
+          <img src="NSX-T-Architecture-and-Components-pptx-5-2048.webp"
+               alt="Arquitectura y componentes de NSX-T"
+               style="max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;border:1px solid var(--border)">
+        </div>
+        <p class="body" style="margin-top:8px;text-align:center;font-size:clamp(9px,1vw,12px)">
+          NSX-T separa el plano de gestión (NSX Manager), el plano de control y el plano de datos distribuido en cada hipervisor.
+        </p>
+      </div>
+      <div class="slide-footer"><span>NSX-T — Arquitectura y Componentes</span><span class="exp-badge exp1">EXP 01</span></div>
     </div>
 
     <!-- SLIDE 06 · VIRTUALIZACIÓN DE RED -->
@@ -874,7 +910,9 @@ const SLIDES = [
   { title: "Agenda", notes: "Tres bloques: Expositor 1 contextualiza (~18 min), Expositor 2 explica la arquitectura técnica (~22 min), Expositor 3 presenta el caso práctico (~20 min). Total: ~60 minutos." },
   { title: "Sección 01 — Contexto VMware & SDN", notes: "Slide de transición. Introduce el bloque del Expositor 1." },
   { title: "¿Qué es VMware?", notes: "VMware fundada en 1998 en Palo Alto. En 2001 lanzaron ESX Server, el hipervisor bare-metal. El portafolio creció: vSphere, vSAN, NSX. En 2023 Broadcom adquirió VMware y consolidó todo en VMware Cloud Foundation (VCF).\n\n'VMware convirtió la infraestructura física en software. Servidores primero, luego almacenamiento, y con NSX, la red completa.'" },
+  { title: "Virtualización de Servidores", notes: "Antes de hablar de redes virtuales, es clave entender la virtualización de servidores.\n\nUn servidor físico tradicional corre un solo SO y subutiliza el hardware. El hipervisor (ESXi) permite correr múltiples VMs sobre el mismo hardware, cada una con su propio SO y recursos aislados.\n\nEsta misma lógica — abstraer el hardware en software — es la que NSX aplica a la red." },
   { title: "Evolución NSX-V → NSX-T → NSX", notes: "NSX-V (2012): atado a vSphere, descontinuado en 2022.\nNSX-T (2017): agnóstico del hipervisor, API-first, multi-cloud.\nNSX / vDefend (2022–hoy): nombre unificado, parte de VCF, DFW renombrado a vDefend.\n\nSi alguien pregunta por NSX-D: es una variante para VMware Cloud on AWS." },
+  { title: "NSX-T — Arquitectura y Componentes", notes: "Esta imagen muestra los tres planos de NSX-T:\n\n• Management Plane: NSX Manager — interfaz única de gestión y API REST.\n• Control Plane: Central Control Plane (CCP) — distribuye el estado de la red a los nodos de transporte.\n• Data Plane: Transport Nodes (hipervisores ESXi/KVM) — donde realmente se aplican las políticas con el N-VDS y el DFW.\n\nLa separación de planos es el principio SDN aplicado a la red del datacenter." },
   { title: "Virtualización de Red (NV)", notes: "En una red tradicional, cambios toman días o semanas y requieren intervención del equipo de networking. NSX cambia eso: la red se convierte en software.\n\n'Con NSX, la red es código. Se puede crear, mover, clonar y eliminar junto con las máquinas virtuales.'" },
   { title: "Tráfico Norte-Sur vs. Este-Oeste", notes: "Tráfico Norte-Sur: entra y sale del datacenter. El firewall perimetral lo controla bien.\n\nTráfico Este-Oeste: movimiento lateral entre servidores dentro del datacenter. El firewall perimetral NO lo ve.\n\nSi un atacante compromete una VM, puede moverse libremente entre todas las VMs de la misma VLAN. Ese es el vector principal de ransomware moderno.\n\nSeñala el diagrama mientras explicas." },
   { title: "Video Introductorio", notes: "Video de ~5 minutos que muestra NSX en acción. Demostración de la interfaz real del NSX Manager y cómo se configura la microsegmentación en una aplicación de tres capas.\n\n⚠ Verificar que el video cargue correctamente antes de la exposición." },
