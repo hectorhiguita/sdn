@@ -5,1213 +5,887 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VMware NSX — Zero Trust y Microsegmentación</title>
 <style>
-  :root {
-    --bg: #0a0e1a;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --border: #1e2d45;
-    --accent: #3b82f6;
-    --accent2: #06b6d4;
-    --accent3: #8b5cf6;
-    --green: #10b981;
-    --red: #ef4444;
-    --yellow: #f59e0b;
-    --text: #f1f5f9;
-    --text2: #94a3b8;
-    --text3: #64748b;
-    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); }
-
-  /* ── LAYOUT ── */
-  #app { display: flex; flex-direction: column; height: 100vh; }
-
-  /* ── TOP BAR ── */
-  #topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 24px; height: 52px; background: var(--surface);
-    border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 16px;
-  }
-  #topbar .brand { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .05em; white-space: nowrap; }
-  #topbar .title-bar { font-size: 13px; color: var(--text2); flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #topbar .controls { display: flex; align-items: center; gap: 8px; }
-  .btn-icon {
-    background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
-    width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-size: 14px;
-    display: flex; align-items: center; justify-content: center; transition: all .15s;
-  }
-  .btn-icon:hover { background: var(--border); color: var(--text); }
-  #slide-counter { font-size: 12px; color: var(--text3); min-width: 52px; text-align: center; }
-
-  /* ── MAIN AREA ── */
-  #main { display: flex; flex: 1; overflow: hidden; }
-
-  /* ── SIDEBAR ── */
-  #sidebar {
-    width: 220px; background: var(--surface); border-right: 1px solid var(--border);
-    overflow-y: auto; flex-shrink: 0; transition: width .25s; padding: 8px 0;
-  }
-  #sidebar.collapsed { width: 0; padding: 0; overflow: hidden; }
-  .sidebar-section { padding: 6px 12px 2px; font-size: 10px; font-weight: 700;
-    color: var(--text3); letter-spacing: .1em; text-transform: uppercase; }
-  .thumb {
-    display: flex; align-items: center; gap: 10px; padding: 7px 12px;
-    cursor: pointer; border-left: 3px solid transparent; transition: all .15s;
-    font-size: 12px; color: var(--text2);
-  }
-  .thumb:hover { background: var(--surface2); color: var(--text); }
-  .thumb.active { border-left-color: var(--accent); background: var(--surface2); color: var(--text); }
-  .thumb-num { font-size: 10px; color: var(--text3); min-width: 18px; }
-  .thumb-label { line-height: 1.3; }
-
-  /* ── SLIDE STAGE ── */
-  #stage {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 24px; overflow: hidden; position: relative;
-  }
-  .slide {
-    display: none; width: 100%; max-width: 960px; max-height: calc(100vh - 120px);
-    aspect-ratio: 16/9; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; overflow: hidden; position: relative;
-    box-shadow: 0 25px 60px rgba(0,0,0,.5);
-  }
-  .slide.active { display: flex; flex-direction: column; }
-
-  /* ── SLIDE INNER ── */
-  .slide-inner {
-    flex: 1; padding: 40px 48px; display: flex; flex-direction: column;
-    justify-content: center; overflow: hidden;
-  }
-  .slide-inner.pad-sm { padding: 28px 40px; }
-
-  /* ── SLIDE FOOTER ── */
-  .slide-footer {
-    padding: 10px 48px; border-top: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    font-size: 10px; color: var(--text3); flex-shrink: 0;
-  }
-  .exp-badge {
-    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
-    letter-spacing: .05em;
-  }
-  .exp1 { background: rgba(59,130,246,.15); color: var(--accent); }
-  .exp2 { background: rgba(139,92,246,.15); color: var(--accent3); }
-  .exp3 { background: rgba(16,185,129,.15); color: var(--green); }
-
-  /* ── TYPOGRAPHY ── */
-  .slide-tag { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--accent); margin-bottom: 10px; }
-  .slide-tag.purple { color: var(--accent3); }
-  .slide-tag.green { color: var(--green); }
-  h1.hero { font-size: clamp(22px, 3.5vw, 42px); font-weight: 800; line-height: 1.15; }
-  h2.title { font-size: clamp(16px, 2.5vw, 28px); font-weight: 700; line-height: 1.2; }
-  h3.subtitle { font-size: clamp(13px, 1.8vw, 20px); font-weight: 600; color: var(--text2); }
-  p.body { font-size: clamp(11px, 1.3vw, 15px); color: var(--text2); line-height: 1.65; }
-  .accent-line { width: 48px; height: 3px; border-radius: 2px; background: var(--accent); margin: 14px 0; }
-  .accent-line.purple { background: var(--accent3); }
-  .accent-line.green { background: var(--green); }
-
-  /* ── GRID HELPERS ── */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
-
-  /* ── CARDS ── */
-  .card {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 16px; font-size: clamp(10px, 1.1vw, 13px);
-  }
-  .card .card-title { font-weight: 700; margin-bottom: 6px; font-size: clamp(11px, 1.2vw, 14px); }
-  .card .card-body { color: var(--text2); line-height: 1.5; }
-  .card.accent-border { border-left: 3px solid var(--accent); }
-  .card.purple-border { border-left: 3px solid var(--accent3); }
-  .card.green-border { border-left: 3px solid var(--green); }
-  .card.yellow-border { border-left: 3px solid var(--yellow); }
-
-  /* ── TIMELINE ── */
-  .timeline { display: flex; gap: 0; align-items: stretch; }
-  .tl-item { flex: 1; position: relative; padding: 14px 16px 14px 20px; }
-  .tl-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--border); }
-  .tl-item.active-tl::before { background: var(--accent); }
-  .tl-year { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
-  .tl-text { font-size: clamp(10px, 1vw, 12px); color: var(--text2); line-height: 1.4; }
-
-  /* ── COMPARE TABLE ── */
-  .compare-table { width: 100%; border-collapse: collapse; font-size: clamp(9px, 1vw, 12px); }
-  .compare-table th { padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700;
-    letter-spacing: .05em; border-bottom: 2px solid var(--border); }
-  .compare-table td { padding: 7px 12px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
-  .compare-table tr:last-child td { border-bottom: none; }
-  .compare-table .col-bad { color: #f87171; }
-  .compare-table .col-good { color: var(--green); }
-  .compare-table .col-label { color: var(--text); font-weight: 600; }
-  .th-bad { color: var(--red) !important; }
-  .th-good { color: var(--green) !important; }
-
-  /* ── FIREWALL RULE TABLE ── */
-  .fw-table { width: 100%; border-collapse: collapse; font-size: clamp(9px, 1vw, 12px); }
-  .fw-table th { padding: 7px 10px; text-align: left; font-size: 10px; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border); }
-  .fw-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); color: var(--text2); }
-  .fw-table tr:last-child td { border-bottom: none; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
-  .badge-allow { background: rgba(16,185,129,.15); color: var(--green); }
-  .badge-deny { background: rgba(239,68,68,.15); color: var(--red); }
-
-  /* ── ARCH DIAGRAM ── */
-  .arch-box {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 10px 14px; text-align: center; font-size: clamp(9px, 1vw, 12px);
-  }
-  .arch-box .arch-label { font-weight: 700; margin-bottom: 3px; }
-  .arch-box .arch-sub { color: var(--text3); font-size: clamp(8px, .9vw, 11px); }
-  .arch-arrow { display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: 18px; }
-  .vm-row { display: flex; gap: 8px; }
-  .vm-chip {
-    flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
-    padding: 8px; text-align: center; font-size: clamp(8px, .9vw, 11px);
-  }
-  .vm-chip .vm-name { font-weight: 700; margin-bottom: 2px; }
-  .vm-chip .vm-dfw { font-size: 9px; color: var(--accent); }
-
-  /* ── STEP FLOW ── */
-  .step-flow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .step-card {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 14px 16px; position: relative;
-  }
-  .step-num { font-size: 10px; font-weight: 700; letter-spacing: .08em; margin-bottom: 6px; }
-  .step-title { font-size: clamp(11px, 1.2vw, 14px); font-weight: 700; margin-bottom: 5px; }
-  .step-body { font-size: clamp(9px, 1vw, 12px); color: var(--text2); line-height: 1.5; }
-  .step-card.danger { border-left: 3px solid var(--red); }
-  .step-card.warning { border-left: 3px solid var(--yellow); }
-  .step-card.info { border-left: 3px solid var(--accent); }
-  .step-card.success { border-left: 3px solid var(--green); }
-
-  /* ── GLOSSARY ── */
-  .gloss-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
-  .gloss-item { display: flex; gap: 10px; align-items: baseline; font-size: clamp(9px, 1vw, 12px); padding: 4px 0; border-bottom: 1px solid var(--border); }
-  .gloss-term { font-weight: 700; color: var(--accent); min-width: 52px; flex-shrink: 0; }
-  .gloss-def { color: var(--text2); line-height: 1.4; }
-
-  /* ── AGENDA ── */
-  .agenda-item {
-    display: flex; align-items: center; gap: 16px; padding: 14px 18px;
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-  }
-  .agenda-num { font-size: 28px; font-weight: 900; line-height: 1; }
-  .agenda-content .agenda-title { font-size: clamp(13px, 1.5vw, 17px); font-weight: 700; }
-  .agenda-content .agenda-sub { font-size: clamp(10px, 1.1vw, 13px); color: var(--text2); margin-top: 2px; }
-  .agenda-time { margin-left: auto; font-size: 12px; color: var(--text3); white-space: nowrap; }
-
-  /* ── SECTION DIVIDER ── */
-  .section-slide { background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); }
-  .section-num { font-size: clamp(60px, 10vw, 100px); font-weight: 900; line-height: 1;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-  .section-num.purple { background: linear-gradient(135deg, var(--accent3), #ec4899);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-  .section-num.green { background: linear-gradient(135deg, var(--green), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-
-  /* ── COVER ── */
-  .cover-slide { background: linear-gradient(135deg, #0a0e1a 0%, #0f172a 50%, #0a1628 100%); }
-  .cover-slide::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse at 70% 50%, rgba(59,130,246,.08) 0%, transparent 60%),
-                radial-gradient(ellipse at 20% 80%, rgba(139,92,246,.06) 0%, transparent 50%);
-  }
-  .cover-inner { position: relative; z-index: 1; }
-  .cover-tags { display: flex; gap: 8px; margin-bottom: 20px; }
-  .cover-tag { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
-    padding: 4px 10px; border-radius: 4px; border: 1px solid; }
-  .cover-tag.blue { color: var(--accent); border-color: rgba(59,130,246,.3); background: rgba(59,130,246,.08); }
-  .cover-tag.cyan { color: var(--accent2); border-color: rgba(6,182,212,.3); background: rgba(6,182,212,.08); }
-  .cover-tag.purple { color: var(--accent3); border-color: rgba(139,92,246,.3); background: rgba(139,92,246,.08); }
-  .cover-title { font-size: clamp(28px, 5vw, 56px); font-weight: 900; line-height: 1.1; margin-bottom: 8px; }
-  .cover-title span { background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-  .cover-sub { font-size: clamp(14px, 2vw, 22px); color: var(--text2); margin-bottom: 28px; }
-  .cover-meta { display: flex; gap: 24px; flex-wrap: wrap; }
-  .cover-meta-item { font-size: 12px; color: var(--text3); }
-  .cover-meta-item strong { color: var(--text2); display: block; font-size: 13px; }
-
-  /* ── ZERO TRUST PILLARS ── */
-  .zt-pillar {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 16px; display: flex; flex-direction: column; gap: 8px;
-  }
-  .zt-icon { font-size: 22px; margin-bottom: 4px; }
-  .zt-title { font-size: clamp(12px, 1.3vw, 15px); font-weight: 700; }
-  .zt-desc { font-size: clamp(9px, 1vw, 12px); color: var(--text2); line-height: 1.5; }
-  .zt-impl { font-size: clamp(8px, .9vw, 11px); color: var(--accent); margin-top: 4px; }
-
-  /* ── TRAFFIC DIAGRAM ── */
-  .traffic-diagram { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: clamp(9px, 1vw, 12px); }
-  .traffic-row { display: flex; align-items: center; gap: 8px; }
-  .traffic-box { padding: 6px 14px; border-radius: 6px; font-weight: 600; text-align: center; white-space: nowrap; }
-  .traffic-arrow-v { color: var(--text3); font-size: 16px; }
-  .traffic-arrow-h { color: var(--text3); font-size: 14px; flex: 1; text-align: center; }
-  .traffic-label { font-size: 10px; color: var(--text3); text-align: center; }
-
-  /* ── INDUSTRY CARDS ── */
-  .industry-card {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 14px 16px;
-  }
-  .industry-icon { font-size: 20px; margin-bottom: 6px; }
-  .industry-title { font-size: clamp(11px, 1.2vw, 14px); font-weight: 700; margin-bottom: 5px; }
-  .industry-body { font-size: clamp(9px, 1vw, 12px); color: var(--text2); line-height: 1.5; }
-
-  /* ── PROGRESS BAR ── */
-  #progress { height: 2px; background: var(--border); flex-shrink: 0; }
-  #progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .3s; }
-
-  /* ── KEYBOARD HINT ── */
-  #kbd-hint { position: absolute; bottom: 16px; right: 20px; font-size: 10px; color: var(--text3);
-    display: flex; gap: 8px; align-items: center; pointer-events: none; }
-  kbd { background: var(--surface2); border: 1px solid var(--border); border-radius: 3px;
-    padding: 1px 5px; font-size: 10px; font-family: var(--font); }
-
-  /* ── SCROLLBAR ── */
-  #sidebar::-webkit-scrollbar { width: 4px; }
-  #sidebar::-webkit-scrollbar-track { background: transparent; }
-  #sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  /* ── PRESENTER NOTES PANEL ── */
-  #notes-panel {
-    width: 300px; background: var(--surface); border-left: 1px solid var(--border);
-    display: flex; flex-direction: column; flex-shrink: 0; transition: width .25s;
-  }
-  #notes-panel.collapsed { width: 0; overflow: hidden; }
-  #notes-header { padding: 12px 16px; border-bottom: 1px solid var(--border);
-    font-size: 11px; font-weight: 700; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
-  #notes-content { flex: 1; overflow-y: auto; padding: 16px; font-size: 12px; color: var(--text2); line-height: 1.7; }
-  #notes-content::-webkit-scrollbar { width: 4px; }
-  #notes-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  /* ── FULLSCREEN ── */
-  #app.fullscreen #sidebar { display: none; }
-  #app.fullscreen #notes-panel { display: none; }
-  #app.fullscreen #topbar { display: none; }
-  #app.fullscreen #progress { display: none; }
-  #app.fullscreen #stage { padding: 0; }
-  #app.fullscreen .slide { border-radius: 0; border: none; max-width: 100%; max-height: 100vh; }
-
-  /* ── HIGHLIGHT ── */
-  .hl { color: var(--accent); font-weight: 700; }
-  .hl-green { color: var(--green); font-weight: 700; }
-  .hl-red { color: var(--red); font-weight: 700; }
-  .hl-yellow { color: var(--yellow); font-weight: 700; }
-  .hl-purple { color: var(--accent3); font-weight: 700; }
-
-  /* ── QUOTE ── */
-  .quote-block {
-    border-left: 3px solid var(--accent); padding: 10px 16px; margin: 12px 0;
-    background: rgba(59,130,246,.05); border-radius: 0 6px 6px 0;
-    font-size: clamp(11px, 1.2vw, 14px); color: var(--text2); font-style: italic; line-height: 1.6;
-  }
-
-  /* ── VDEFEND BADGE ── */
-  .vdefend-badge {
-    display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px;
-    background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3);
-    border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--green);
-  }
-
-  /* ── CONCLUSION ITEMS ── */
-  .conclusion-item {
-    display: flex; gap: 14px; align-items: flex-start; padding: 12px 16px;
-    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-  }
-  .conclusion-num { font-size: 22px; font-weight: 900; color: var(--accent); line-height: 1; flex-shrink: 0; }
-  .conclusion-text { font-size: clamp(11px, 1.2vw, 14px); color: var(--text2); line-height: 1.55; }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    #sidebar { display: none; }
-    #notes-panel { display: none; }
-    .slide-inner { padding: 20px 24px; }
-    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-    .step-flow { grid-template-columns: 1fr; }
-    .gloss-grid { grid-template-columns: 1fr; }
-  }
+:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1a2235;--border:#1e2d45;--accent:#3b82f6;--accent2:#06b6d4;--accent3:#8b5cf6;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;--font:'Segoe UI',system-ui,-apple-system,sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font)}
+#app{display:flex;flex-direction:column;height:100vh}
+#topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:16px}
+.brand{font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.05em;white-space:nowrap}
+.title-bar{font-size:13px;color:var(--text2);flex:1;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.controls{display:flex;align-items:center;gap:8px}
+.btn-icon{background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.btn-icon:hover{background:var(--border);color:var(--text)}
+#slide-counter{font-size:12px;color:var(--text3);min-width:52px;text-align:center}
+#main{display:flex;flex:1;overflow:hidden}
+#sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;transition:width .25s;padding:8px 0}
+#sidebar.collapsed{width:0;padding:0;overflow:hidden}
+.sidebar-section{padding:6px 12px 2px;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase}
+.thumb{display:flex;align-items:center;gap:10px;padding:7px 12px;cursor:pointer;border-left:3px solid transparent;transition:all .15s;font-size:12px;color:var(--text2)}
+.thumb:hover{background:var(--surface2);color:var(--text)}
+.thumb.active{border-left-color:var(--accent);background:var(--surface2);color:var(--text)}
+.thumb-num{font-size:10px;color:var(--text3);min-width:18px}
+#stage{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;position:relative}
+.slide{display:none;width:100%;max-width:960px;max-height:calc(100vh - 120px);aspect-ratio:16/9;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;box-shadow:0 25px 60px rgba(0,0,0,.5)}
+.slide.active{display:flex;flex-direction:column}
+.slide-inner{flex:1;padding:40px 48px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
+.slide-inner.pad-sm{padding:28px 40px}
+.slide-footer{padding:10px 48px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text3);flex-shrink:0}
+.exp-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.05em}
+.exp1{background:rgba(59,130,246,.15);color:var(--accent)}
+.exp2{background:rgba(139,92,246,.15);color:var(--accent3)}
+.exp3{background:rgba(16,185,129,.15);color:var(--green)}
+.slide-tag{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.slide-tag.purple{color:var(--accent3)}
+.slide-tag.green{color:var(--green)}
+h2.title{font-size:clamp(16px,2.5vw,28px);font-weight:700;line-height:1.2}
+p.body{font-size:clamp(11px,1.3vw,15px);color:var(--text2);line-height:1.65}
+.accent-line{width:48px;height:3px;border-radius:2px;background:var(--accent);margin:14px 0}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+.card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;font-size:clamp(10px,1.1vw,13px)}
+.card .card-title{font-weight:700;margin-bottom:6px;font-size:clamp(11px,1.2vw,14px)}
+.card .card-body{color:var(--text2);line-height:1.5}
+.card.accent-border{border-left:3px solid var(--accent)}
+.card.purple-border{border-left:3px solid var(--accent3)}
+.card.green-border{border-left:3px solid var(--green)}
+.card.yellow-border{border-left:3px solid var(--yellow)}
+.timeline{display:flex;gap:0;align-items:stretch}
+.tl-item{flex:1;position:relative;padding:14px 16px 14px 20px}
+.tl-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--border)}
+.tl-item.active-tl::before{background:var(--accent)}
+.tl-year{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px}
+.tl-text{font-size:clamp(10px,1vw,12px);color:var(--text2);line-height:1.4}
+.compare-table{width:100%;border-collapse:collapse;font-size:clamp(9px,1vw,12px)}
+.compare-table th{padding:8px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.05em;border-bottom:2px solid var(--border)}
+.compare-table td{padding:7px 12px;border-bottom:1px solid var(--border);color:var(--text2);vertical-align:top}
+.compare-table tr:last-child td{border-bottom:none}
+.col-bad{color:#f87171}
+.col-good{color:var(--green)}
+.col-label{color:var(--text);font-weight:600}
+.th-bad{color:var(--red)!important}
+.th-good{color:var(--green)!important}
+.fw-table{width:100%;border-collapse:collapse;font-size:clamp(9px,1vw,12px)}
+.fw-table th{padding:7px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)}
+.fw-table td{padding:7px 10px;border-bottom:1px solid var(--border);color:var(--text2)}
+.fw-table tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700}
+.badge-allow{background:rgba(16,185,129,.15);color:var(--green)}
+.badge-deny{background:rgba(239,68,68,.15);color:var(--red)}
+.vm-row{display:flex;gap:8px}
+.vm-chip{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center;font-size:clamp(8px,.9vw,11px)}
+.vm-chip .vm-name{font-weight:700;margin-bottom:2px}
+.vm-chip .vm-dfw{font-size:9px;color:var(--accent)}
+.step-flow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.step-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.step-num{font-size:10px;font-weight:700;letter-spacing:.08em;margin-bottom:6px}
+.step-title{font-size:clamp(11px,1.2vw,14px);font-weight:700;margin-bottom:5px}
+.step-body{font-size:clamp(9px,1vw,12px);color:var(--text2);line-height:1.5}
+.step-card.danger{border-left:3px solid var(--red)}
+.step-card.warning{border-left:3px solid var(--yellow)}
+.step-card.info{border-left:3px solid var(--accent)}
+.step-card.success{border-left:3px solid var(--green)}
+.gloss-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px}
+.gloss-item{display:flex;gap:10px;align-items:baseline;font-size:clamp(9px,1vw,12px);padding:4px 0;border-bottom:1px solid var(--border)}
+.gloss-term{font-weight:700;color:var(--accent);min-width:52px;flex-shrink:0}
+.gloss-def{color:var(--text2);line-height:1.4}
+.agenda-item{display:flex;align-items:center;gap:16px;padding:14px 18px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
+.agenda-num{font-size:28px;font-weight:900;line-height:1}
+.agenda-content .agenda-title{font-size:clamp(13px,1.5vw,17px);font-weight:700}
+.agenda-content .agenda-sub{font-size:clamp(10px,1.1vw,13px);color:var(--text2);margin-top:2px}
+.agenda-time{margin-left:auto;font-size:12px;color:var(--text3);white-space:nowrap}
+.section-slide{background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%)}
+.section-num{font-size:clamp(60px,10vw,100px);font-weight:900;line-height:1;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-num.purple{background:linear-gradient(135deg,var(--accent3),#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.section-num.green{background:linear-gradient(135deg,var(--green),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.cover-slide{background:linear-gradient(135deg,#0a0e1a 0%,#0f172a 50%,#0a1628 100%)}
+.cover-slide::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(59,130,246,.08) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(139,92,246,.06) 0%,transparent 50%)}
+.cover-inner{position:relative;z-index:1}
+.cover-tags{display:flex;gap:8px;margin-bottom:20px}
+.cover-tag{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1px solid}
+.cover-tag.blue{color:var(--accent);border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.08)}
+.cover-tag.cyan{color:var(--accent2);border-color:rgba(6,182,212,.3);background:rgba(6,182,212,.08)}
+.cover-tag.purple{color:var(--accent3);border-color:rgba(139,92,246,.3);background:rgba(139,92,246,.08)}
+.cover-title{font-size:clamp(28px,5vw,56px);font-weight:900;line-height:1.1;margin-bottom:8px}
+.cover-title span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.cover-sub{font-size:clamp(14px,2vw,22px);color:var(--text2);margin-bottom:28px}
+.cover-meta{display:flex;gap:24px;flex-wrap:wrap}
+.cover-meta-item{font-size:12px;color:var(--text3)}
+.cover-meta-item strong{color:var(--text2);display:block;font-size:13px}
+.zt-pillar{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.zt-icon{font-size:22px;margin-bottom:4px}
+.zt-title{font-size:clamp(12px,1.3vw,15px);font-weight:700}
+.zt-desc{font-size:clamp(9px,1vw,12px);color:var(--text2);line-height:1.5}
+.zt-impl{font-size:clamp(8px,.9vw,11px);color:var(--accent);margin-top:4px}
+.industry-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.industry-icon{font-size:20px;margin-bottom:6px}
+.industry-title{font-size:clamp(11px,1.2vw,14px);font-weight:700;margin-bottom:5px}
+.industry-body{font-size:clamp(9px,1vw,12px);color:var(--text2);line-height:1.5}
+#progress{height:2px;background:var(--border);flex-shrink:0}
+#progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s}
+#notes-panel{width:300px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .25s}
+#notes-panel.collapsed{width:0;overflow:hidden}
+#notes-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.08em;text-transform:uppercase}
+#notes-content{flex:1;overflow-y:auto;padding:16px;font-size:12px;color:var(--text2);line-height:1.7}
+#notes-content::-webkit-scrollbar{width:4px}
+#notes-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+#app.fullscreen #sidebar,#app.fullscreen #notes-panel,#app.fullscreen #topbar,#app.fullscreen #progress{display:none}
+#app.fullscreen #stage{padding:0}
+#app.fullscreen .slide{border-radius:0;border:none;max-width:100%;max-height:100vh}
+.hl{color:var(--accent);font-weight:700}
+.hl-green{color:var(--green);font-weight:700}
+.hl-red{color:var(--red);font-weight:700}
+.hl-yellow{color:var(--yellow);font-weight:700}
+.hl-purple{color:var(--accent3);font-weight:700}
+.quote-block{border-left:3px solid var(--accent);padding:10px 16px;margin:12px 0;background:rgba(59,130,246,.05);border-radius:0 6px 6px 0;font-size:clamp(11px,1.2vw,14px);color:var(--text2);font-style:italic;line-height:1.6}
+.conclusion-item{display:flex;gap:14px;align-items:flex-start;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px}
+.conclusion-num{font-size:22px;font-weight:900;color:var(--accent);line-height:1;flex-shrink:0}
+.conclusion-text{font-size:clamp(11px,1.2vw,14px);color:var(--text2);line-height:1.55}
+#sidebar::-webkit-scrollbar{width:4px}
+#sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.video-slide-inner{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 40px;gap:12px}
+.video-wrapper{position:relative;width:100%;max-width:720px;aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.video-wrapper iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+@media(max-width:768px){#sidebar,#notes-panel{display:none}.slide-inner{padding:20px 24px}.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.step-flow{grid-template-columns:1fr}.gloss-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- TOP BAR -->
-  <div id="topbar">
-    <div class="brand">VMware NSX</div>
-    <div class="title-bar" id="slide-title">Portada</div>
-    <div class="controls">
-      <button class="btn-icon" id="btn-sidebar" title="Panel lateral">☰</button>
-      <button class="btn-icon" id="btn-prev" title="Anterior (←)">‹</button>
-      <span id="slide-counter">1 / 21</span>
-      <button class="btn-icon" id="btn-next" title="Siguiente (→)">›</button>
-      <button class="btn-icon" id="btn-notes" title="Notas del expositor">📋</button>
-      <button class="btn-icon" id="btn-fs" title="Pantalla completa">⛶</button>
-    </div>
+<div id="topbar">
+  <div class="brand">VMware NSX</div>
+  <div class="title-bar" id="slide-title">Portada</div>
+  <div class="controls">
+    <button class="btn-icon" id="btn-sidebar" title="Panel lateral">☰</button>
+    <button class="btn-icon" id="btn-prev" title="Anterior (←)">‹</button>
+    <span id="slide-counter">1 / 21</span>
+    <button class="btn-icon" id="btn-next" title="Siguiente (→)">›</button>
+    <button class="btn-icon" id="btn-notes" title="Notas del expositor">📋</button>
+    <button class="btn-icon" id="btn-fs" title="Pantalla completa">⛶</button>
+  </div>
+</div>
+
+<div id="progress"><div id="progress-fill"></div></div>
+
+<div id="main">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-section">Expositor 1 · ~18 min</div>
+    <div class="thumb active" data-slide="0"><span class="thumb-num">01</span><span>Portada</span></div>
+    <div class="thumb" data-slide="1"><span class="thumb-num">02</span><span>Agenda</span></div>
+    <div class="thumb" data-slide="2"><span class="thumb-num">03</span><span>Sección 01</span></div>
+    <div class="thumb" data-slide="3"><span class="thumb-num">04</span><span>¿Qué es VMware?</span></div>
+    <div class="thumb" data-slide="4"><span class="thumb-num">05</span><span>Evolución NSX</span></div>
+    <div class="thumb" data-slide="5"><span class="thumb-num">06</span><span>Virtualización de Red</span></div>
+    <div class="thumb" data-slide="6"><span class="thumb-num">07</span><span>Tráfico N-S vs E-O</span></div>
+    <div class="thumb" data-slide="7"><span class="thumb-num">08</span><span>Video introductorio</span></div>
+    <div class="sidebar-section">Expositor 2 · ~22 min</div>
+    <div class="thumb" data-slide="8"><span class="thumb-num">09</span><span>Sección 02</span></div>
+    <div class="thumb" data-slide="9"><span class="thumb-num">10</span><span>Arquitectura NSX</span></div>
+    <div class="thumb" data-slide="10"><span class="thumb-num">11</span><span>DFW — Guardián por VM</span></div>
+    <div class="thumb" data-slide="11"><span class="thumb-num">12</span><span>Microsegmentación</span></div>
+    <div class="thumb" data-slide="12"><span class="thumb-num">13</span><span>Zero Trust</span></div>
+    <div class="thumb" data-slide="13"><span class="thumb-num">14</span><span>Políticas NSX Manager</span></div>
+    <div class="sidebar-section">Expositor 3 · ~20 min</div>
+    <div class="thumb" data-slide="14"><span class="thumb-num">15</span><span>Sección 03</span></div>
+    <div class="thumb" data-slide="15"><span class="thumb-num">16</span><span>Caso: Ransomware</span></div>
+    <div class="thumb" data-slide="16"><span class="thumb-num">17</span><span>App 3 Capas</span></div>
+    <div class="thumb" data-slide="17"><span class="thumb-num">18</span><span>Comparativa</span></div>
+    <div class="thumb" data-slide="18"><span class="thumb-num">19</span><span>Adopción Industria</span></div>
+    <div class="thumb" data-slide="19"><span class="thumb-num">20</span><span>Glosario</span></div>
+    <div class="thumb" data-slide="20"><span class="thumb-num">21</span><span>Conclusiones</span></div>
   </div>
 
-  <!-- PROGRESS -->
-  <div id="progress"><div id="progress-fill"></div></div>
+  <!-- STAGE -->
+  <div id="stage">
 
-  <!-- MAIN -->
-  <div id="main">
-
-    <!-- SIDEBAR -->
-    <div id="sidebar">
-      <div class="sidebar-section">Expositor 1 · ~18 min</div>
-      <div class="thumb active" data-slide="0"><span class="thumb-num">01</span><span class="thumb-label">Portada</span></div>
-      <div class="thumb" data-slide="1"><span class="thumb-num">02</span><span class="thumb-label">Agenda</span></div>
-      <div class="thumb" data-slide="2"><span class="thumb-num">03</span><span class="thumb-label">Sección 01</span></div>
-      <div class="thumb" data-slide="3"><span class="thumb-num">04</span><span class="thumb-label">¿Qué es VMware?</span></div>
-      <div class="thumb" data-slide="4"><span class="thumb-num">05</span><span class="thumb-label">Evolución NSX</span></div>
-      <div class="thumb" data-slide="5"><span class="thumb-num">06</span><span class="thumb-label">Virtualización de Red</span></div>
-      <div class="thumb" data-slide="6"><span class="thumb-num">07</span><span class="thumb-label">Tráfico N-S vs E-O</span></div>
-      <div class="thumb" data-slide="7"><span class="thumb-num">08</span><span class="thumb-label">Video introductorio</span></div>
-      <div class="sidebar-section">Expositor 2 · ~22 min</div>
-      <div class="thumb" data-slide="8"><span class="thumb-num">09</span><span class="thumb-label">Sección 02</span></div>
-      <div class="thumb" data-slide="9"><span class="thumb-num">10</span><span class="thumb-label">Arquitectura NSX</span></div>
-      <div class="thumb" data-slide="10"><span class="thumb-num">11</span><span class="thumb-label">DFW — Guardián por VM</span></div>
-      <div class="thumb" data-slide="11"><span class="thumb-num">12</span><span class="thumb-label">Microsegmentación</span></div>
-      <div class="thumb" data-slide="12"><span class="thumb-num">13</span><span class="thumb-label">Zero Trust</span></div>
-      <div class="thumb" data-slide="13"><span class="thumb-num">14</span><span class="thumb-label">Políticas NSX Manager</span></div>
-      <div class="sidebar-section">Expositor 3 · ~20 min</div>
-      <div class="thumb" data-slide="14"><span class="thumb-num">15</span><span class="thumb-label">Sección 03</span></div>
-      <div class="thumb" data-slide="15"><span class="thumb-num">16</span><span class="thumb-label">Caso: Ransomware</span></div>
-      <div class="thumb" data-slide="16"><span class="thumb-num">17</span><span class="thumb-label">App 3 Capas</span></div>
-      <div class="thumb" data-slide="17"><span class="thumb-num">18</span><span class="thumb-label">Comparativa</span></div>
-      <div class="thumb" data-slide="18"><span class="thumb-num">19</span><span class="thumb-label">Adopción Industria</span></div>
-      <div class="thumb" data-slide="19"><span class="thumb-num">20</span><span class="thumb-label">Glosario</span></div>
-      <div class="thumb" data-slide="20"><span class="thumb-num">21</span><span class="thumb-label">Conclusiones</span></div>
+    <!-- SLIDE 01 · PORTADA -->
+    <div class="slide active cover-slide">
+      <div class="slide-inner cover-inner" style="justify-content:center">
+        <div class="cover-tags">
+          <span class="cover-tag blue">SECURITY</span>
+          <span class="cover-tag cyan">SDN</span>
+          <span class="cover-tag purple">CLOUD</span>
+        </div>
+        <p class="slide-tag" style="margin-bottom:6px">Exposición No. 6</p>
+        <div class="cover-title">VMware <span>NSX</span></div>
+        <div class="cover-title" style="font-size:clamp(18px,3vw,36px);margin-top:4px">Virtualización de Red y<br>Seguridad <span>Zero Trust</span></div>
+        <p class="cover-sub" style="margin-top:14px">SDN — Redes Definidas por Software</p>
+        <div class="cover-meta">
+          <div class="cover-meta-item"><strong>Institución</strong>ITM · Facultad de Ingeniería</div>
+          <div class="cover-meta-item"><strong>Orientador</strong>Juan Diego V.</div>
+          <div class="cover-meta-item"><strong>Semestre</strong>8° Telecomunicaciones</div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>VMware NSX · Zero Trust y Microsegmentación</span><span class="exp-badge exp1">EXP 01</span></div>
     </div>
 
-    <!-- STAGE -->
-    <div id="stage">
-
-      <!-- ── SLIDE 01 · PORTADA ── -->
-      <div class="slide active cover-slide">
-        <div class="slide-inner cover-inner" style="justify-content:center;">
-          <div class="cover-tags">
-            <span class="cover-tag blue">SECURITY</span>
-            <span class="cover-tag cyan">SDN</span>
-            <span class="cover-tag purple">CLOUD</span>
+    <!-- SLIDE 02 · AGENDA -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag">Agenda</div>
+        <h2 class="title" style="margin-bottom:18px">Agenda de la Presentación</h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="agenda-item">
+            <div class="agenda-num" style="color:var(--accent)">01</div>
+            <div class="agenda-content">
+              <div class="agenda-title">Contexto VMware &amp; SDN</div>
+              <div class="agenda-sub">Historia, portafolio, relevancia, problema N-S vs E-O</div>
+            </div>
+            <div class="agenda-time">~18 min</div>
           </div>
-          <p class="slide-tag" style="margin-bottom:6px;">Exposición No. 6</p>
-          <div class="cover-title">VMware <span>NSX</span></div>
-          <div class="cover-title" style="font-size:clamp(18px,3vw,36px);margin-top:4px;">Virtualización de Red y<br>Seguridad <span>Zero Trust</span></div>
-          <p class="cover-sub" style="margin-top:14px;">SDN — Redes Definidas por Software</p>
-          <div class="cover-meta">
-            <div class="cover-meta-item"><strong>Institución</strong>ITM · Facultad de Ingeniería</div>
-            <div class="cover-meta-item"><strong>Orientador</strong>Juan Diego V.</div>
-            <div class="cover-meta-item"><strong>Semestre</strong>8° Telecomunicaciones</div>
+          <div class="agenda-item">
+            <div class="agenda-num" style="color:var(--accent3)">02</div>
+            <div class="agenda-content">
+              <div class="agenda-title">Arquitectura NSX y Microsegmentación</div>
+              <div class="agenda-sub">NSX Manager, DFW, Zero Trust, políticas de seguridad</div>
+            </div>
+            <div class="agenda-time">~22 min</div>
+          </div>
+          <div class="agenda-item">
+            <div class="agenda-num" style="color:var(--green)">03</div>
+            <div class="agenda-content">
+              <div class="agenda-title">Caso Práctico y Beneficios</div>
+              <div class="agenda-sub">Contención de ransomware, impacto real, industria</div>
+            </div>
+            <div class="agenda-time">~20 min</div>
           </div>
         </div>
-        <div class="slide-footer">
-          <span>VMware NSX · Zero Trust y Microsegmentación</span>
-          <span class="exp-badge exp1">EXP 01</span>
+        <p class="body" style="margin-top:14px;text-align:center">Duración total estimada: <strong style="color:var(--text)">60 minutos</strong></p>
+      </div>
+      <div class="slide-footer"><span>Agenda</span><span class="exp-badge exp1">EXP 01</span></div>
+    </div>
+
+    <!-- SLIDE 03 · SECCIÓN 01 -->
+    <div class="slide section-slide">
+      <div class="slide-inner" style="justify-content:center">
+        <div class="section-num">01</div>
+        <h2 class="title" style="margin-top:12px">Contexto VMware &amp; SDN</h2>
+        <p class="body" style="margin-top:8px">Historia, portafolio y por qué importa NSX</p>
+      </div>
+      <div class="slide-footer"><span>Sección 01</span><span class="exp-badge exp1">EXP 01</span></div>
+    </div>
+
+    <!-- SLIDE 04 · ¿QUÉ ES VMWARE? -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag">Historia y Portafolio</div>
+        <h2 class="title" style="margin-bottom:14px">¿Qué es VMware?</h2>
+        <div class="timeline" style="margin-bottom:16px">
+          <div class="tl-item active-tl"><div class="tl-year">1998</div><div class="tl-text">Fundación en Palo Alto, CA. Pioneros en virtualización x86.</div></div>
+          <div class="tl-item active-tl"><div class="tl-year">2001</div><div class="tl-text">ESX Server — hipervisor bare-metal que transformó los datacenters.</div></div>
+          <div class="tl-item active-tl"><div class="tl-year">2012</div><div class="tl-text">NSX: virtualización de red, completando el SDDC.</div></div>
+          <div class="tl-item active-tl"><div class="tl-year">2023</div><div class="tl-text">Adquisición por Broadcom → VMware Cloud Foundation (VCF).</div></div>
+        </div>
+        <div class="grid-4">
+          <div class="card accent-border"><div class="card-title">vSphere / ESXi</div><div class="card-body">Virtualización de servidores (hipervisor)</div></div>
+          <div class="card purple-border"><div class="card-title">NSX</div><div class="card-body">Virtualización de red y seguridad</div></div>
+          <div class="card yellow-border"><div class="card-title">vSAN</div><div class="card-body">Almacenamiento definido por software</div></div>
+          <div class="card green-border"><div class="card-title">VMware Cloud Foundation</div><div class="card-body">Stack completo: vSphere + NSX + vSAN</div></div>
         </div>
       </div>
+      <div class="slide-footer"><span>¿Qué es VMware? — Historia y Portafolio</span><span class="exp-badge exp1">EXP 01</span></div>
+    </div>
 
-      <!-- ── SLIDE 02 · AGENDA ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag">Agenda</div>
-          <h2 class="title" style="margin-bottom:18px;">Agenda de la Presentación</h2>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div class="agenda-item">
-              <div class="agenda-num" style="color:var(--accent);">01</div>
-              <div class="agenda-content">
-                <div class="agenda-title">Contexto VMware & SDN</div>
-                <div class="agenda-sub">Historia, portafolio, relevancia, problema N-S vs E-O</div>
-              </div>
-              <div class="agenda-time">~18 min</div>
-            </div>
-            <div class="agenda-item">
-              <div class="agenda-num" style="color:var(--accent3);">02</div>
-              <div class="agenda-content">
-                <div class="agenda-title">Arquitectura NSX y Microsegmentación</div>
-                <div class="agenda-sub">NSX Manager, DFW, Zero Trust, políticas de seguridad</div>
-              </div>
-              <div class="agenda-time">~22 min</div>
-            </div>
-            <div class="agenda-item">
-              <div class="agenda-num" style="color:var(--green);">03</div>
-              <div class="agenda-content">
-                <div class="agenda-title">Caso Práctico y Beneficios</div>
-                <div class="agenda-sub">Contención de ransomware, impacto real, industria</div>
-              </div>
-              <div class="agenda-time">~20 min</div>
+    <!-- SLIDE 05 · EVOLUCIÓN NSX -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag">Línea de Tiempo del Producto</div>
+        <h2 class="title" style="margin-bottom:16px">Evolución: NSX-V → NSX-T → NSX (vDefend)</h2>
+        <div class="grid-3" style="align-items:start">
+          <div class="card" style="border-top:3px solid var(--text3)">
+            <div class="card-title" style="color:var(--text3)">NSX-V <span style="font-size:10px;font-weight:400">2012–2022</span></div>
+            <div class="card-body" style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+              <div>Atado a VMware vSphere</div><div>Solo hipervisores ESXi</div><div>Integración profunda con vCenter</div>
+              <div style="color:var(--red);margin-top:4px">✕ Descontinuado en 2022</div>
             </div>
           </div>
-          <p class="body" style="margin-top:14px;text-align:center;">Duración total estimada: <strong style="color:var(--text);">60 minutos</strong></p>
-        </div>
-        <div class="slide-footer">
-          <span>Agenda</span>
-          <span class="exp-badge exp1">EXP 01</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 03 · SECCIÓN 01 ── -->
-      <div class="slide section-slide">
-        <div class="slide-inner" style="justify-content:center;">
-          <div class="section-num">01</div>
-          <h2 class="title" style="margin-top:12px;">Contexto VMware &amp; SDN</h2>
-          <p class="body" style="margin-top:8px;">Historia, portafolio y por qué importa NSX</p>
-        </div>
-        <div class="slide-footer">
-          <span>Sección 01</span>
-          <span class="exp-badge exp1">EXP 01</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 04 · ¿QUÉ ES VMWARE? ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag">Historia y Portafolio</div>
-          <h2 class="title" style="margin-bottom:14px;">¿Qué es VMware?</h2>
-          <div class="timeline" style="margin-bottom:16px;">
-            <div class="tl-item active-tl">
-              <div class="tl-year">1998</div>
-              <div class="tl-text">Fundación en Palo Alto, CA. Pioneros en virtualización x86.</div>
-            </div>
-            <div class="tl-item active-tl">
-              <div class="tl-year">2001</div>
-              <div class="tl-text">ESX Server — hipervisor bare-metal que transformó los datacenters.</div>
-            </div>
-            <div class="tl-item active-tl">
-              <div class="tl-year">2012</div>
-              <div class="tl-text">NSX: virtualización de red, completando el SDDC.</div>
-            </div>
-            <div class="tl-item active-tl">
-              <div class="tl-year">2023</div>
-              <div class="tl-text">Adquisición por Broadcom → VMware Cloud Foundation (VCF).</div>
+          <div class="card" style="border-top:3px solid var(--accent)">
+            <div class="card-title" style="color:var(--accent)">NSX-T <span style="font-size:10px;font-weight:400">2017–2022</span></div>
+            <div class="card-body" style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+              <div>Agnóstico de hipervisor</div><div>Soporta KVM, bare-metal, containers</div><div>API-first, automatización</div>
+              <div style="color:var(--accent)">Multi-cloud ready</div>
             </div>
           </div>
-          <div class="grid-4">
+          <div class="card" style="border-top:3px solid var(--green)">
+            <div class="card-title" style="color:var(--green)">NSX / vDefend <span style="font-size:10px;font-weight:400">2022–hoy ★</span></div>
+            <div class="card-body" style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+              <div>Nombre unificado: solo 'NSX'</div><div>Parte de VMware Cloud Foundation</div><div>DFW renombrado a <strong>vDefend</strong></div>
+              <div style="color:var(--green)">IA para detección de amenazas</div>
+            </div>
+          </div>
+        </div>
+        <div class="quote-block" style="margin-top:14px">La versión actual se llama <span class="hl">NSX</span>. El componente DFW fue rebautizado como <span class="hl-green">VMware vDefend</span> tras la adquisición de Broadcom en 2023.</div>
+      </div>
+      <div class="slide-footer"><span>Evolución NSX-V → NSX-T → NSX</span><span class="exp-badge exp1">EXP 01</span></div>
+    </div>
+
+    <!-- SLIDE 06 · VIRTUALIZACIÓN DE RED -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag">Concepto Central</div>
+        <h2 class="title" style="margin-bottom:16px">¿Qué es la Virtualización de Red (NV)?</h2>
+        <div class="grid-2">
+          <div>
+            <p style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:10px">✕ Red Tradicional (física)</p>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="card" style="border-left:3px solid var(--red)"><div class="card-body">Switches y routers físicos — hardware dedicado</div></div>
+              <div class="card" style="border-left:3px solid var(--red)"><div class="card-body">Cambios requieren cableado manual y downtime</div></div>
+              <div class="card" style="border-left:3px solid var(--red)"><div class="card-body">Semanas para provisionar una nueva VLAN</div></div>
+              <div class="card" style="border-left:3px solid var(--red)"><div class="card-body">Seguridad depende de la topología física</div></div>
+            </div>
+          </div>
+          <div>
+            <p style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px">✓ Red Virtualizada (NSX)</p>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="card" style="border-left:3px solid var(--green)"><div class="card-body">Switches, routers y firewalls en <strong>software</strong></div></div>
+              <div class="card" style="border-left:3px solid var(--green)"><div class="card-body">Desacoplado del hardware físico — cero cambios</div></div>
+              <div class="card" style="border-left:3px solid var(--green)"><div class="card-body"><strong>Red = código:</strong> crear/mover/eliminar en segundos</div></div>
+              <div class="card" style="border-left:3px solid var(--green)"><div class="card-body">Seguridad sigue a la VM, no a la VLAN</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="quote-block" style="margin-top:14px">"Con NSX, la red es código. Se puede crear, mover, clonar y eliminar junto con las máquinas virtuales."</div>
+      </div>
+      <div class="slide-footer"><span>Virtualización de Red (NV)</span><span class="exp-badge exp1">EXP 01</span></div>
+    </div>
+
+    <!-- SLIDE 07 · TRÁFICO N-S vs E-O -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag">El Problema de Seguridad</div>
+        <h2 class="title" style="margin-bottom:16px">Tráfico Norte-Sur vs. Este-Oeste</h2>
+        <div class="grid-2" style="align-items:start">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:8px;font-size:clamp(10px,1.1vw,13px)">
+            <div style="padding:8px 20px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:6px;font-weight:700;color:var(--accent2)">🌐 INTERNET</div>
+            <div style="color:var(--text3);font-size:18px">↕</div>
+            <div style="padding:6px 16px;background:rgba(59,130,246,.15);border:1px solid var(--accent);border-radius:6px;font-weight:700;color:var(--accent)">🛡 FIREWALL PERIMETRAL</div>
+            <div style="font-size:10px;color:var(--green)">✓ Controla tráfico Norte-Sur</div>
+            <div style="color:var(--text3);font-size:18px">↕</div>
+            <div style="padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:100%;text-align:center">
+              <div style="font-size:10px;color:var(--text3);margin-bottom:8px">DATACENTER — misma VLAN</div>
+              <div style="display:flex;gap:6px;justify-content:center;align-items:center">
+                <div style="padding:6px 10px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:6px;font-size:11px;font-weight:700;color:var(--red)">Web VM<br><span style="font-size:9px">⚠ infectada</span></div>
+                <div style="color:var(--yellow);font-size:16px">→</div>
+                <div style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:11px;font-weight:700">App VM</div>
+                <div style="color:var(--yellow);font-size:16px">→</div>
+                <div style="padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:11px;font-weight:700">DB VM<br><span style="font-size:9px;color:var(--red)">objetivo</span></div>
+              </div>
+              <div style="font-size:10px;color:var(--red);margin-top:8px">← Movimiento lateral Este-Oeste — el firewall NO lo ve →</div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
             <div class="card accent-border">
-              <div class="card-title">vSphere / ESXi</div>
-              <div class="card-body">Virtualización de servidores (hipervisor)</div>
+              <div class="card-title" style="color:var(--accent)">↕ Tráfico Norte-Sur</div>
+              <div class="card-body">Entra y sale del datacenter desde internet. El firewall perimetral lo controla. Los firewalls tradicionales son muy buenos aquí.</div>
             </div>
-            <div class="card purple-border">
-              <div class="card-title">NSX</div>
-              <div class="card-body">Virtualización de red y seguridad</div>
+            <div class="card" style="border-left:3px solid var(--red)">
+              <div class="card-title" style="color:var(--red)">↔ Tráfico Este-Oeste</div>
+              <div class="card-body">Movimiento lateral entre servidores dentro del datacenter. <strong style="color:var(--red)">El firewall perimetral no lo ve.</strong> Si un atacante entra, se mueve libremente entre VMs de la misma VLAN.</div>
             </div>
-            <div class="card yellow-border">
-              <div class="card-title">vSAN</div>
-              <div class="card-body">Almacenamiento definido por software</div>
-            </div>
-            <div class="card green-border">
-              <div class="card-title">VMware Cloud Foundation</div>
-              <div class="card-body">Stack completo: vSphere + NSX + vSAN</div>
+            <div class="card" style="border-left:3px solid var(--yellow)">
+              <div class="card-title" style="color:var(--yellow)">⚠ El Problema</div>
+              <div class="card-body">Un servidor comprometido puede propagarse a toda la VLAN. Este es el vector principal de ransomware moderno. NSX resuelve exactamente esto.</div>
             </div>
           </div>
         </div>
-        <div class="slide-footer">
-          <span>¿Qué es VMware? — Historia y Portafolio</span>
-          <span class="exp-badge exp1">EXP 01</span>
+      </div>
+      <div class="slide-footer"><span>Tráfico Norte-Sur vs. Este-Oeste</span><span class="exp-badge exp1">EXP 01</span></div>
+    </div>
+
+    <!-- SLIDE 08 · VIDEO -->
+    <div class="slide">
+      <div class="video-slide-inner">
+        <div class="slide-tag" style="text-align:center">Video Introductorio</div>
+        <h2 class="title" style="text-align:center;margin-bottom:4px">Descripción general de VMware NSX</h2>
+        <p class="body" style="text-align:center;margin-bottom:12px;font-size:clamp(10px,1vw,12px)">Demostración de NSX en acción — ~5 minutos</p>
+        <div class="video-wrapper">
+          <iframe
+            src="https://www.youtube.com/embed/YUsUUIRHDLU"
+            title="VMware NSX Overview"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen>
+          </iframe>
         </div>
       </div>
+      <div class="slide-footer"><span>Video — VMware NSX Overview</span><span class="exp-badge exp1">EXP 01</span></div>
+    </div>
 
-      <!-- ── SLIDE 05 · EVOLUCIÓN NSX ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag">Línea de Tiempo del Producto</div>
-          <h2 class="title" style="margin-bottom:16px;">Evolución: NSX-V → NSX-T → NSX (vDefend)</h2>
-          <div class="grid-3" style="align-items:start;">
-            <div class="card" style="border-top:3px solid var(--text3);">
-              <div class="card-title" style="color:var(--text3);">NSX-V <span style="font-size:10px;font-weight:400;">2012 – 2022</span></div>
-              <div class="card-body" style="margin-top:8px;display:flex;flex-direction:column;gap:5px;">
-                <div>Atado a VMware vSphere</div>
-                <div>Solo hipervisores ESXi</div>
-                <div>Integración profunda con vCenter</div>
-                <div style="color:var(--red);margin-top:4px;">✕ Descontinuado en 2022</div>
+    <!-- SLIDE 09 · SECCIÓN 02 -->
+    <div class="slide section-slide">
+      <div class="slide-inner" style="justify-content:center">
+        <div class="section-num purple">02</div>
+        <h2 class="title" style="margin-top:12px">Arquitectura NSX y Microsegmentación</h2>
+        <p class="body" style="margin-top:8px">NSX Manager, DFW, Zero Trust, políticas de seguridad</p>
+      </div>
+      <div class="slide-footer"><span>Sección 02</span><span class="exp-badge exp2">EXP 02</span></div>
+    </div>
+
+    <!-- SLIDE 10 · ARQUITECTURA NSX -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag purple">Arquitectura</div>
+        <h2 class="title" style="margin-bottom:14px">Arquitectura NSX: Planos de Control y Datos</h2>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);border-radius:8px;padding:12px 16px;text-align:center">
+            <div style="font-size:clamp(11px,1.2vw,14px);font-weight:700;color:var(--accent3)">NSX Manager — Plano de Control y Gestión</div>
+            <div style="font-size:clamp(9px,1vw,12px);color:var(--text2);margin-top:4px">Define políticas centralmente · API REST · Distribuye reglas DFW automáticamente</div>
+          </div>
+          <div style="display:flex;justify-content:center;color:var(--text3);font-size:13px">↓ distribuye reglas ↓</div>
+          <div class="grid-2">
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px">Hipervisor — Servidor Físico 1</div>
+              <div class="vm-row">
+                <div class="vm-chip"><div class="vm-name">Web VM</div><div class="vm-dfw">DFW · vNIC</div></div>
+                <div class="vm-chip"><div class="vm-name">App VM</div><div class="vm-dfw">DFW · vNIC</div></div>
               </div>
+              <div style="margin-top:8px;padding:6px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:4px;font-size:10px;text-align:center;color:var(--accent)">Virtual Switch (N-VDS) · Plano de Datos</div>
             </div>
-            <div class="card" style="border-top:3px solid var(--accent);">
-              <div class="card-title" style="color:var(--accent);">NSX-T <span style="font-size:10px;font-weight:400;">2017 – 2022</span></div>
-              <div class="card-body" style="margin-top:8px;display:flex;flex-direction:column;gap:5px;">
-                <div>Agnóstico de hipervisor</div>
-                <div>Soporta KVM, bare-metal, containers</div>
-                <div>API-first, automatización</div>
-                <div style="color:var(--accent);">Multi-cloud ready</div>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px">Hipervisor — Servidor Físico 2</div>
+              <div class="vm-row">
+                <div class="vm-chip"><div class="vm-name">DB VM</div><div class="vm-dfw">DFW · vNIC</div></div>
+                <div class="vm-chip"><div class="vm-name">Otra VM</div><div class="vm-dfw">DFW · vNIC</div></div>
               </div>
-            </div>
-            <div class="card" style="border-top:3px solid var(--green);">
-              <div class="card-title" style="color:var(--green);">NSX / vDefend <span style="font-size:10px;font-weight:400;">2022 – hoy</span></div>
-              <div class="card-body" style="margin-top:8px;display:flex;flex-direction:column;gap:5px;">
-                <div>Nombre unificado: solo 'NSX'</div>
-                <div>Parte de VMware Cloud Foundation</div>
-                <div>DFW renombrado a <strong>vDefend</strong></div>
-                <div style="color:var(--green);">IA para detección de amenazas</div>
-              </div>
+              <div style="margin-top:8px;padding:6px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:4px;font-size:10px;text-align:center;color:var(--accent)">Virtual Switch (N-VDS) · Plano de Datos</div>
             </div>
           </div>
-          <div class="quote-block" style="margin-top:14px;">La versión actual se llama <span class="hl">NSX</span> (sin sufijo). El componente de seguridad del DFW fue rebautizado como <span class="hl-green">VMware vDefend</span> tras la adquisición de Broadcom en 2023.</div>
-        </div>
-        <div class="slide-footer">
-          <span>Evolución NSX-V → NSX-T → NSX</span>
-          <span class="exp-badge exp1">EXP 01</span>
+          <div style="padding:8px 16px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:11px;text-align:center;color:var(--text3)">Red Física Subyacente — sin cambios requeridos · Encapsulamiento VXLAN</div>
         </div>
       </div>
+      <div class="slide-footer"><span>Arquitectura NSX: Planos de Control y Datos</span><span class="exp-badge exp2">EXP 02</span></div>
+    </div>
 
-      <!-- ── SLIDE 06 · VIRTUALIZACIÓN DE RED ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag">Concepto Fundamental</div>
-          <h2 class="title" style="margin-bottom:14px;">¿Qué es la Virtualización de Red (NV)?</h2>
-          <div class="grid-2" style="gap:14px;">
-            <div>
-              <p style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Red Tradicional (física)</p>
-              <div style="display:flex;flex-direction:column;gap:6px;">
-                <div class="card" style="border-left:3px solid var(--red);"><div class="card-body">Switches y routers físicos</div></div>
-                <div class="card" style="border-left:3px solid var(--red);"><div class="card-body">Cambios requieren cableado manual</div></div>
-                <div class="card" style="border-left:3px solid var(--red);"><div class="card-body">Semanas para provisionar una VLAN</div></div>
-                <div class="card" style="border-left:3px solid var(--red);"><div class="card-body">Seguridad depende de la topología física</div></div>
-                <div class="card" style="border-left:3px solid var(--red);"><div class="card-body">Alta dependencia del hardware</div></div>
-              </div>
-            </div>
-            <div>
-              <p style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Red Virtualizada (NSX)</p>
-              <div style="display:flex;flex-direction:column;gap:6px;">
-                <div class="card" style="border-left:3px solid var(--green);"><div class="card-body">Switches, routers y firewalls en software</div></div>
-                <div class="card" style="border-left:3px solid var(--green);"><div class="card-body">Desacoplado del hardware físico</div></div>
-                <div class="card" style="border-left:3px solid var(--green);"><div class="card-body">Red = código: crear/mover/eliminar en segundos</div></div>
-                <div class="card" style="border-left:3px solid var(--green);"><div class="card-body">Seguridad sigue a la VM, no a la VLAN</div></div>
-                <div class="card" style="border-left:3px solid var(--green);"><div class="card-body">Automatizable vía API</div></div>
-              </div>
-            </div>
+    <!-- SLIDE 11 · DFW -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag purple">Componente Clave</div>
+        <h2 class="title" style="margin-bottom:14px">NSX Distributed Firewall (DFW) — El Guardián de cada VM</h2>
+        <p class="body" style="margin-bottom:14px">El DFW vive en el <span class="hl-purple">kernel del hipervisor</span> y aplica políticas en la <span class="hl">vNIC de cada VM</span> — no en la red física.</p>
+        <div class="grid-2">
+          <div class="card purple-border">
+            <div class="card-title">🔍 Capas L2 – L7</div>
+            <div class="card-body">Inspección stateful desde la capa de enlace hasta aplicación. Soporta reglas por puerto, protocolo y aplicación.</div>
+          </div>
+          <div class="card purple-border">
+            <div class="card-title">🚀 Sigue a la VM (vMotion)</div>
+            <div class="card-body">Las reglas DFW se mueven con la VM durante vMotion. La seguridad no depende de la ubicación física.</div>
+          </div>
+          <div class="card purple-border">
+            <div class="card-title">🏷 Políticas por identidad</div>
+            <div class="card-body">Reglas basadas en tags, nombre de VM, sistema operativo, grupo de seguridad — no solo IP/puerto.</div>
+          </div>
+          <div class="card purple-border">
+            <div class="card-title">⚡ Sin hair-pinning</div>
+            <div class="card-body">El tráfico no sale al firewall físico y vuelve. Inspección local en el hipervisor = baja latencia, line-rate.</div>
           </div>
         </div>
-        <div class="slide-footer">
-          <span>Virtualización de Red (NV)</span>
-          <span class="exp-badge exp1">EXP 01</span>
-        </div>
+        <div class="quote-block" style="margin-top:12px">Analogía: si el firewall perimetral es el guardia de la puerta del edificio, el DFW es un <strong>guardaespaldas personal</strong> que acompaña a cada servidor a donde vaya.</div>
       </div>
+      <div class="slide-footer"><span>NSX Distributed Firewall (DFW)</span><span class="exp-badge exp2">EXP 02</span></div>
+    </div>
 
-      <!-- ── SLIDE 07 · TRÁFICO N-S vs E-O ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag">El Problema Central</div>
-          <h2 class="title" style="margin-bottom:14px;">Tráfico Norte-Sur vs. Este-Oeste</h2>
-          <div class="grid-2" style="gap:20px;align-items:start;">
-            <div>
-              <div style="display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;">
-                <div class="traffic-box" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);color:var(--accent);width:120px;">🌐 INTERNET</div>
-                <div class="traffic-arrow-v">↕ Norte-Sur<br><span style="font-size:10px;color:var(--green);">✔ Firewall lo ve</span></div>
-                <div class="traffic-box" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);width:140px;">🔥 FIREWALL PERIMETRAL</div>
-                <div class="traffic-arrow-v">↓</div>
-                <div style="border:1px solid var(--border);border-radius:8px;padding:10px;width:100%;background:var(--surface2);">
-                  <p style="font-size:10px;color:var(--text3);text-align:center;margin-bottom:8px;">DATACENTER (misma VLAN)</p>
-                  <div style="display:flex;gap:6px;justify-content:center;">
-                    <div class="traffic-box" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green);font-size:11px;">Web</div>
-                    <div style="display:flex;align-items:center;color:var(--red);font-size:18px;">⇄</div>
-                    <div class="traffic-box" style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--yellow);font-size:11px;">App</div>
-                    <div style="display:flex;align-items:center;color:var(--red);font-size:18px;">⇄</div>
-                    <div class="traffic-box" style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);color:var(--accent3);font-size:11px;">DB</div>
-                  </div>
-                  <p style="font-size:10px;color:var(--red);text-align:center;margin-top:6px;">↔ Este-Oeste — el firewall NO lo ve</p>
-                </div>
+    <!-- SLIDE 12 · MICROSEGMENTACIÓN -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag purple">Concepto Clave</div>
+        <h2 class="title" style="margin-bottom:14px">Microsegmentación</h2>
+        <div class="grid-2" style="align-items:start">
+          <div>
+            <p style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:10px">Sin microsegmentación</p>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:clamp(10px,1.1vw,13px);color:var(--text2);margin-bottom:10px">Como un edificio con solo un guardia en la puerta principal.</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+                <div style="padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px">Sala A</div>
+                <div style="padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px">Sala B</div>
+                <div style="padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px">Sala C</div>
+                <div style="padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:6px">Sala D</div>
               </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:10px;">
-              <div class="card green-border">
-                <div class="card-title">Tráfico Norte-Sur ✔</div>
-                <div class="card-body">Entra/sale del datacenter. El firewall perimetral lo controla. Los firewalls tradicionales son muy buenos aquí.</div>
-              </div>
-              <div class="card" style="border-left:3px solid var(--red);">
-                <div class="card-title" style="color:var(--red);">Tráfico Este-Oeste ✗</div>
-                <div class="card-body">Movimiento lateral entre servidores <em>dentro</em> del datacenter. Nunca sale → el firewall perimetral no lo ve. Un atacante que ya está dentro se mueve libremente.</div>
-              </div>
-              <div class="quote-block" style="margin-top:4px;">Este es el vector principal del <span class="hl-red">ransomware moderno</span>. NSX resuelve exactamente este problema.</div>
+              <div style="font-size:10px;color:var(--red);margin-top:8px">Una vez dentro → acceso libre a todo</div>
             </div>
           </div>
-        </div>
-        <div class="slide-footer">
-          <span>El Problema: Tráfico Norte-Sur vs. Este-Oeste</span>
-          <span class="exp-badge exp1">EXP 01</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 08 · VIDEO ── -->
-      <div class="slide">
-        <div class="slide-inner" style="justify-content:center;align-items:center;text-align:center;">
-          <div class="slide-tag" style="text-align:center;">Video Introductorio</div>
-          <h2 class="title" style="margin-bottom:8px;">Descripción general de VMware NSX</h2>
-          <p class="body" style="margin-bottom:20px;">Demostración de microsegmentación en una aplicación de tres capas — WWT (World Wide Technology)</p>
-          <a href="https://www.youtube.com/watch?v=YUsUUIRHDLU" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:10px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;transition:all .15s;"
-             onmouseover="this.style.background='rgba(239,68,68,.2)'" onmouseout="this.style.background='rgba(239,68,68,.1)'">
-            ▶ Abrir video en YouTube
-          </a>
-          <p style="margin-top:16px;font-size:11px;color:var(--text3);">youtube.com/watch?v=YUsUUIRHDLU · ~5 min</p>
-        </div>
-        <div class="slide-footer">
-          <span>Video Introductorio</span>
-          <span class="exp-badge exp1">EXP 01</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 09 · SECCIÓN 02 ── -->
-      <div class="slide section-slide">
-        <div class="slide-inner" style="justify-content:center;">
-          <div class="section-num purple">02</div>
-          <h2 class="title" style="margin-top:12px;">Arquitectura NSX y Microsegmentación</h2>
-          <p class="body" style="margin-top:8px;">NSX Manager, DFW, Zero Trust, políticas de seguridad</p>
-        </div>
-        <div class="slide-footer">
-          <span>Sección 02</span>
-          <span class="exp-badge exp2">EXP 02</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 10 · ARQUITECTURA NSX ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag purple">Planos de Control y Datos</div>
-          <h2 class="title" style="margin-bottom:14px;">Arquitectura NSX</h2>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div class="arch-box" style="border-color:var(--accent3);background:rgba(139,92,246,.07);">
-              <div class="arch-label" style="color:var(--accent3);">NSX Manager — Plano de Control y Gestión</div>
-              <div class="arch-sub">Define políticas centralmente · API REST · Distribuye reglas DFW automáticamente</div>
-            </div>
-            <div class="arch-arrow">↓ distribuye reglas DFW ↓</div>
-            <div class="grid-2" style="gap:10px;">
-              <div style="border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--surface2);">
-                <p style="font-size:10px;color:var(--text3);margin-bottom:6px;text-align:center;">Hipervisor — Servidor físico 1</p>
-                <div class="vm-row">
-                  <div class="vm-chip"><div class="vm-name">Web VM</div><div class="vm-dfw">DFW · vNIC</div></div>
-                  <div class="vm-chip"><div class="vm-name">App VM</div><div class="vm-dfw">DFW · vNIC</div></div>
-                </div>
-                <div class="arch-box" style="margin-top:6px;padding:5px;"><div class="arch-sub">Virtual Switch (N-VDS) · Plano de Datos</div></div>
+          <div>
+            <p style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:10px">Con microsegmentación NSX</p>
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center">
+              <div style="font-size:clamp(10px,1.1vw,13px);color:var(--text2);margin-bottom:10px">Como un hotel: cada habitación tiene su propia cerradura y llave.</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+                <div style="padding:8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:6px;color:var(--accent)">Web VM 🔒</div>
+                <div style="padding:8px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:6px;color:var(--accent3)">App VM 🔒</div>
+                <div style="padding:8px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:6px;color:var(--green)">DB VM 🔒</div>
+                <div style="padding:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:6px;color:var(--yellow)">Admin 🔒</div>
               </div>
-              <div style="border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--surface2);">
-                <p style="font-size:10px;color:var(--text3);margin-bottom:6px;text-align:center;">Hipervisor — Servidor físico 2</p>
-                <div class="vm-row">
-                  <div class="vm-chip"><div class="vm-name">DB VM</div><div class="vm-dfw">DFW · vNIC</div></div>
-                  <div class="vm-chip"><div class="vm-name">Otra VM</div><div class="vm-dfw">DFW · vNIC</div></div>
-                </div>
-                <div class="arch-box" style="margin-top:6px;padding:5px;"><div class="arch-sub">Virtual Switch (N-VDS) · Plano de Datos</div></div>
-              </div>
-            </div>
-            <div class="arch-arrow">↓</div>
-            <div class="arch-box" style="border-color:var(--border);">
-              <div class="arch-sub">Red Física Subyacente — sin cambios requeridos (encapsulamiento VXLAN)</div>
+              <div style="font-size:10px;color:var(--green);margin-top:8px">Cada VM: políticas únicas de acceso</div>
             </div>
           </div>
         </div>
-        <div class="slide-footer">
-          <span>Arquitectura NSX: Planos de Control y Datos</span>
-          <span class="exp-badge exp2">EXP 02</span>
-        </div>
+        <div class="quote-block" style="margin-top:12px">Microsegmentación: divide el datacenter en zonas de seguridad hasta el nivel individual de cada VM, con políticas únicas para cada una.</div>
       </div>
+      <div class="slide-footer"><span>Microsegmentación — El Concepto Clave</span><span class="exp-badge exp2">EXP 02</span></div>
+    </div>
 
-      <!-- ── SLIDE 11 · DFW ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag purple">Componente de Seguridad Clave</div>
-          <h2 class="title" style="margin-bottom:6px;">NSX Distributed Firewall (DFW)</h2>
-          <p class="body" style="margin-bottom:14px;">El DFW vive en el <span class="hl-purple">kernel del hipervisor</span> y aplica políticas en la <span class="hl">vNIC de cada VM</span> — no en la red física.</p>
-          <div class="grid-2" style="gap:10px;">
-            <div class="card purple-border">
-              <div class="card-title">🔍 Capas L2 → L7</div>
-              <div class="card-body">Inspección stateful desde la capa de enlace hasta aplicación. Soporta reglas por puerto, protocolo y aplicación.</div>
-            </div>
-            <div class="card purple-border">
-              <div class="card-title">🚚 Sigue a la VM (vMotion)</div>
-              <div class="card-body">Las reglas DFW se mueven con la VM durante vMotion. La seguridad no depende de la ubicación física.</div>
-            </div>
-            <div class="card purple-border">
-              <div class="card-title">🏷️ Políticas por identidad</div>
-              <div class="card-body">Reglas basadas en tags, nombre de VM, sistema operativo, grupo de seguridad — no solo IP/puerto.</div>
-            </div>
-            <div class="card purple-border">
-              <div class="card-title">⚡ Sin hair-pinning</div>
-              <div class="card-body">El tráfico no sale al firewall físico y vuelve. Inspección local en el hipervisor = baja latencia, line-rate.</div>
-            </div>
+    <!-- SLIDE 13 · ZERO TRUST -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag purple">Modelo de Seguridad</div>
+        <h2 class="title" style="margin-bottom:6px">Principios de Zero Trust</h2>
+        <p class="body" style="margin-bottom:14px;font-style:italic;color:var(--text3)">"Nunca confiar · Siempre verificar · Asumir que ya hubo una brecha" — John Kindervag, Forrester 2010</p>
+        <div class="grid-3">
+          <div class="zt-pillar">
+            <div class="zt-icon">🔐</div>
+            <div class="zt-title">Verificar explícitamente</div>
+            <div class="zt-desc">Autenticar siempre basándose en todos los datos disponibles: identidad, dispositivo, ubicación.</div>
+            <div class="zt-impl">NSX aplica esto en cada paquete de red con contexto completo.</div>
+          </div>
+          <div class="zt-pillar">
+            <div class="zt-icon">🎯</div>
+            <div class="zt-title">Mínimo privilegio</div>
+            <div class="zt-desc">Solo el acceso mínimo necesario para cada tarea. Políticas granulares por VM, por aplicación.</div>
+            <div class="zt-impl">Modelo whitelist: todo está denegado por defecto.</div>
+          </div>
+          <div class="zt-pillar">
+            <div class="zt-icon">🛡</div>
+            <div class="zt-title">Asumir brecha</div>
+            <div class="zt-desc">Diseñar como si el atacante ya estuviera dentro. Minimizar radio de explosión.</div>
+            <div class="zt-impl">El DFW bloquea el movimiento lateral inmediatamente.</div>
           </div>
         </div>
-        <div class="slide-footer">
-          <span>NSX Distributed Firewall (DFW) — El Guardián de cada VM</span>
-          <span class="exp-badge exp2">EXP 02</span>
+        <div style="margin-top:14px;padding:10px 16px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px);text-align:center;color:var(--accent3)">
+          NSX implementa Zero Trust mediante <strong>microsegmentación</strong>, <strong>DFW distribuido</strong> y <strong>políticas basadas en identidad</strong>
         </div>
       </div>
+      <div class="slide-footer"><span>Principios de Zero Trust</span><span class="exp-badge exp2">EXP 02</span></div>
+    </div>
 
-      <!-- ── SLIDE 12 · MICROSEGMENTACIÓN ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag purple">El Concepto Clave</div>
-          <h2 class="title" style="margin-bottom:14px;">Microsegmentación</h2>
-          <div class="grid-2" style="gap:16px;align-items:start;">
-            <div>
-              <p style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Sin microsegmentación</p>
-              <div class="card" style="border-top:3px solid var(--red);text-align:center;">
-                <div style="font-size:28px;margin-bottom:8px;">🏢</div>
-                <div class="card-title">Un edificio con solo un guardia en la puerta</div>
-                <div class="card-body" style="margin-top:8px;">Una vez dentro → acceso libre a todo. Una VM comprometida puede llegar a todas las demás.</div>
-              </div>
+    <!-- SLIDE 14 · POLÍTICAS NSX MANAGER -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag purple">Interfaz Real</div>
+        <h2 class="title" style="margin-bottom:14px">Grupos y Políticas en NSX Manager</h2>
+        <div class="grid-2" style="align-items:start">
+          <div>
+            <p style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">Paso 1 — Grupos de Seguridad (dinámicos)</p>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:clamp(9px,1vw,12px)">
+              <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:6px"><span style="color:var(--accent);font-weight:700;min-width:70px">WebTier</span><span style="color:var(--text2)">tag: web, nginx, apache</span></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:6px"><span style="color:var(--accent3);font-weight:700;min-width:70px">AppTier</span><span style="color:var(--text2)">tag: app, business-logic</span></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:6px"><span style="color:var(--green);font-weight:700;min-width:70px">DBTier</span><span style="color:var(--text2)">tag: db, postgresql</span></div>
             </div>
-            <div>
-              <p style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Con microsegmentación NSX</p>
-              <div class="card" style="border-top:3px solid var(--green);text-align:center;">
-                <div style="font-size:28px;margin-bottom:8px;">🏨</div>
-                <div class="card-title">Un hotel: cada habitación tiene su propia cerradura</div>
-                <div class="card-body" style="margin-top:8px;">Cada VM tiene políticas únicas de acceso. Un servidor comprometido queda aislado automáticamente.</div>
-              </div>
-            </div>
+            <p style="font-size:10px;color:var(--text3);margin-top:8px">Los grupos son dinámicos: nueva VM con el tag correcto hereda las políticas automáticamente.</p>
           </div>
-          <div class="quote-block" style="margin-top:12px;">Microsegmentación: divide el datacenter en zonas de seguridad hasta el nivel individual de cada VM, con políticas únicas para cada una.</div>
-        </div>
-        <div class="slide-footer">
-          <span>Microsegmentación — El Concepto Clave</span>
-          <span class="exp-badge exp2">EXP 02</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 13 · ZERO TRUST ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag purple">Modelo de Seguridad</div>
-          <h2 class="title" style="margin-bottom:6px;">Principios de Zero Trust</h2>
-          <div class="quote-block" style="margin-bottom:14px;">"Nunca confiar · Siempre verificar · Asumir que ya hubo una brecha"</div>
-          <div class="grid-3" style="gap:12px;">
-            <div class="zt-pillar">
-              <div class="zt-icon">🔒</div>
-              <div class="zt-title">Verificar explícitamente</div>
-              <div class="zt-desc">Autenticar siempre basándose en todos los datos disponibles: identidad, dispositivo y ubicación.</div>
-              <div class="zt-impl">→ NSX: cada paquete verificado con contexto completo</div>
-            </div>
-            <div class="zt-pillar">
-              <div class="zt-icon">📐</div>
-              <div class="zt-title">Mínimo privilegio</div>
-              <div class="zt-desc">Solo el acceso mínimo necesario para cada tarea. Políticas granulares por VM, por aplicación, por usuario.</div>
-              <div class="zt-impl">→ NSX: modelo whitelist — todo denegado por defecto</div>
-            </div>
-            <div class="zt-pillar">
-              <div class="zt-icon">🛡️</div>
-              <div class="zt-title">Asumir brecha</div>
-              <div class="zt-desc">Diseñar como si el atacante ya estuviera dentro. Minimizar radio de explosión con microsegmentación.</div>
-              <div class="zt-impl">→ DFW bloquea el movimiento lateral inmediatamente</div>
-            </div>
-          </div>
-          <div style="text-align:center;margin-top:12px;"><span class="vdefend-badge">✔ NSX implementa Zero Trust mediante microsegmentación, DFW distribuido y políticas basadas en identidad</span></div>
-        </div>
-        <div class="slide-footer">
-          <span>Principios de Zero Trust — Nunca confiar, siempre verificar</span>
-          <span class="exp-badge exp2">EXP 02</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 14 · POLÍTICAS NSX MANAGER ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag purple">Interfaz Real</div>
-          <h2 class="title" style="margin-bottom:14px;">Grupos y Políticas en NSX Manager</h2>
-          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;">
-            <div style="display:flex;border-bottom:1px solid var(--border);">
-              <div style="padding:8px 16px;font-size:11px;font-weight:700;border-right:1px solid var(--border);color:var(--text3);">Dashboard</div>
-              <div style="padding:8px 16px;font-size:11px;font-weight:700;border-right:1px solid var(--border);color:var(--text3);">Networking</div>
-              <div style="padding:8px 16px;font-size:11px;font-weight:700;border-right:1px solid var(--border);color:var(--accent);background:rgba(59,130,246,.08);">Security</div>
-              <div style="padding:8px 16px;font-size:11px;font-weight:700;color:var(--text3);">Inventory</div>
-            </div>
-            <div style="padding:6px 12px;font-size:10px;color:var(--text3);border-bottom:1px solid var(--border);">Security › Distributed Firewall › Policies</div>
-            <table class="fw-table" style="width:100%;">
-              <thead>
-                <tr>
-                  <th>Nombre</th><th>Origen</th><th>Destino</th><th>Servicio</th><th>Acción</th>
-                </tr>
-              </thead>
+          <div>
+            <p style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">Paso 2 — Políticas DFW (orden importa: ↓)</p>
+            <table class="fw-table">
+              <thead><tr><th>Nombre</th><th>Origen</th><th>Destino</th><th>Puerto</th><th>Acción</th></tr></thead>
               <tbody>
-                <tr>
-                  <td style="color:var(--text);font-weight:600;">Web-to-App</td>
-                  <td><span style="color:var(--accent);font-size:10px;">Grupo:</span> WebTier</td>
-                  <td><span style="color:var(--accent);font-size:10px;">Grupo:</span> AppTier</td>
-                  <td>TCP:8080</td>
-                  <td><span class="badge badge-allow">ALLOW</span></td>
-                </tr>
-                <tr>
-                  <td style="color:var(--text);font-weight:600;">App-to-DB</td>
-                  <td><span style="color:var(--accent);font-size:10px;">Grupo:</span> AppTier</td>
-                  <td><span style="color:var(--accent);font-size:10px;">Grupo:</span> DBTier</td>
-                  <td>TCP:5433</td>
-                  <td><span class="badge badge-allow">ALLOW</span></td>
-                </tr>
-                <tr>
-                  <td style="color:var(--text);font-weight:600;">Block-Lateral</td>
-                  <td>Any</td>
-                  <td><span style="color:var(--accent);font-size:10px;">Grupo:</span> DBTier</td>
-                  <td>Any</td>
-                  <td><span class="badge badge-deny">DENY</span></td>
-                </tr>
-                <tr>
-                  <td style="color:var(--text3);">Default Rule</td>
-                  <td>Any</td><td>Any</td><td>Any</td>
-                  <td><span class="badge badge-deny">DENY</span></td>
-                </tr>
+                <tr><td>Web-to-App</td><td style="color:var(--accent)">WebTier</td><td style="color:var(--accent3)">AppTier</td><td>TCP:8080</td><td><span class="badge badge-allow">ALLOW</span></td></tr>
+                <tr><td>App-to-DB</td><td style="color:var(--accent3)">AppTier</td><td style="color:var(--green)">DBTier</td><td>TCP:5432</td><td><span class="badge badge-allow">ALLOW</span></td></tr>
+                <tr><td>Block-Lateral</td><td>Any</td><td style="color:var(--green)">DBTier</td><td>Any</td><td><span class="badge badge-deny">DENY</span></td></tr>
+                <tr><td>Default Rule</td><td>Any</td><td>Any</td><td>Any</td><td><span class="badge badge-deny">DENY</span></td></tr>
               </tbody>
             </table>
-          </div>
-          <p class="body" style="margin-top:10px;font-size:11px;">El orden de reglas importa: de más específica → más general. <span class="hl">Modelo whitelist</span>: todo denegado por defecto.</p>
-        </div>
-        <div class="slide-footer">
-          <span>Grupos y Políticas en NSX Manager — Interfaz Real</span>
-          <span class="exp-badge exp2">EXP 02</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 15 · SECCIÓN 03 ── -->
-      <div class="slide section-slide">
-        <div class="slide-inner" style="justify-content:center;">
-          <div class="section-num green">03</div>
-          <h2 class="title" style="margin-top:12px;">Caso Práctico y Beneficios</h2>
-          <p class="body" style="margin-top:8px;">Ransomware, impacto real en la industria y conclusiones</p>
-        </div>
-        <div class="slide-footer">
-          <span>Sección 03</span>
-          <span class="exp-badge exp3">EXP 03</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 16 · RANSOMWARE ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag green">Caso Práctico</div>
-          <h2 class="title" style="margin-bottom:14px;">Contención de Ransomware con NSX</h2>
-          <div class="step-flow">
-            <div class="step-card danger">
-              <div class="step-num" style="color:var(--red);">PASO 1 — Infección inicial</div>
-              <div class="step-title">Phishing → Web Server</div>
-              <div class="step-body">El ransomware entra por email de phishing. El firewall perimetral lo permite porque parece tráfico legítimo de internet.</div>
-            </div>
-            <div class="step-card warning">
-              <div class="step-num" style="color:var(--yellow);">PASO 2 — Intento lateral</div>
-              <div class="step-title">Busca App Server y DB</div>
-              <div class="step-body">El ransomware escanea la red local. En red tradicional, sin control E-O, se conecta y cifra todos los servidores.</div>
-            </div>
-            <div class="step-card info">
-              <div class="step-num" style="color:var(--accent);">PASO 3 — NSX DFW bloquea</div>
-              <div class="step-title">Política Default Deny actúa</div>
-              <div class="step-body">El DFW en la vNIC deniega el tráfico no autorizado Este-Oeste. No existe regla que permita Web→DB por puerto 445.</div>
-            </div>
-            <div class="step-card success">
-              <div class="step-num" style="color:var(--green);">PASO 4 — Contención exitosa</div>
-              <div class="step-title">Solo el Web Server comprometido</div>
-              <div class="step-body">App Server y Base de Datos intactos. NSX Intelligence genera alerta con el flow log del intento de ataque.</div>
-            </div>
-          </div>
-          <div class="quote-block" style="margin-top:10px;">Según Mandiant/CrowdStrike, el tiempo promedio de permanencia de un atacante es <span class="hl">21 días</span>. La microsegmentación convierte ese mes de movimiento libre en <span class="hl-green">segundos de contención</span>.</div>
-        </div>
-        <div class="slide-footer">
-          <span>Caso Práctico: Contención de Ransomware con NSX</span>
-          <span class="exp-badge exp3">EXP 03</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 17 · APP 3 CAPAS ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag green">Arquitectura de Referencia</div>
-          <h2 class="title" style="margin-bottom:14px;">Aplicación de 3 Capas — Políticas de Microsegmentación</h2>
-          <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-            <div class="arch-box" style="padding:8px 12px;min-width:80px;text-align:center;">🌐<br><span class="arch-label">Internet</span></div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-              <span style="font-size:10px;color:var(--green);">TCP:443</span>
-              <span style="color:var(--text3);">→</span>
-            </div>
-            <div class="arch-box" style="border-color:var(--green);background:rgba(16,185,129,.07);padding:10px 14px;text-align:center;">
-              <div style="font-size:9px;color:var(--green);font-weight:700;margin-bottom:2px;">DFW</div>
-              <div class="arch-label">Web Tier</div>
-              <div class="arch-sub">Nginx / Apache</div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-              <span style="font-size:10px;color:var(--accent);">TCP:8080</span>
-              <span style="color:var(--text3);">→</span>
-            </div>
-            <div class="arch-box" style="border-color:var(--accent);background:rgba(59,130,246,.07);padding:10px 14px;text-align:center;">
-              <div style="font-size:9px;color:var(--accent);font-weight:700;margin-bottom:2px;">DFW</div>
-              <div class="arch-label">App Tier</div>
-              <div class="arch-sub">Business Logic</div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-              <span style="font-size:10px;color:var(--accent3);">TCP:5432</span>
-              <span style="color:var(--text3);">→</span>
-            </div>
-            <div class="arch-box" style="border-color:var(--accent3);background:rgba(139,92,246,.07);padding:10px 14px;text-align:center;">
-              <div style="font-size:9px;color:var(--accent3);font-weight:700;margin-bottom:2px;">DFW</div>
-              <div class="arch-label">DB Tier</div>
-              <div class="arch-sub">PostgreSQL / MySQL</div>
-            </div>
-          </div>
-          <div class="card" style="border-left:3px solid var(--red);margin-bottom:10px;">
-            <div class="card-title" style="color:var(--red);">Escenario de ataque: Web Tier comprometido intenta Web → DB directo</div>
-            <div class="card-body">El DFW en la vNIC del DB Server recibe el paquete, busca una regla Web→DB → no existe → <span class="hl-red">bloquea inmediatamente</span>. No importa que estén en la misma VLAN.</div>
-          </div>
-          <div class="card green-border">
-            <div class="card-body">Cada VM está protegida individualmente. El atacante no puede saltar capas aunque ya esté dentro de la red.</div>
+            <p style="font-size:10px;color:var(--text3);margin-top:8px">Modelo <strong style="color:var(--text)">whitelist</strong>: todo bloqueado por defecto, solo se permite lo explícitamente autorizado.</p>
           </div>
         </div>
-        <div class="slide-footer">
-          <span>Aplicación de 3 Capas — Políticas de Microsegmentación</span>
-          <span class="exp-badge exp3">EXP 03</span>
-        </div>
       </div>
-
-      <!-- ── SLIDE 18 · COMPARATIVA ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag green">Análisis Comparativo</div>
-          <h2 class="title" style="margin-bottom:14px;">Red Tradicional vs. VMware NSX</h2>
-          <table class="compare-table">
-            <thead>
-              <tr>
-                <th>Aspecto</th>
-                <th class="th-bad">Red Tradicional</th>
-                <th class="th-good">VMware NSX</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="col-label">Superficie de ataque</td>
-                <td class="col-bad">Toda la VLAN expuesta si hay una brecha</td>
-                <td class="col-good">Solo la VM comprometida, el resto aislado</td>
-              </tr>
-              <tr>
-                <td class="col-label">Tiempo de contención</td>
-                <td class="col-bad">Horas o días (detección manual)</td>
-                <td class="col-good">Segundos (DFW aplica políticas automáticamente)</td>
-              </tr>
-              <tr>
-                <td class="col-label">Cambios de red física</td>
-                <td class="col-bad">Re-cablear, nueva VLAN, downtime</td>
-                <td class="col-good">Cero cambios en la red física subyacente</td>
-              </tr>
-              <tr>
-                <td class="col-label">Visibilidad E-O</td>
-                <td class="col-bad">Ninguna — tráfico lateral invisible</td>
-                <td class="col-good">100% — NSX registra cada flujo Este-Oeste</td>
-              </tr>
-              <tr>
-                <td class="col-label">Cumplimiento normativo</td>
-                <td class="col-bad">Difícil auditar en red plana</td>
-                <td class="col-good">Políticas documentadas para GDPR, HIPAA, PCI-DSS</td>
-              </tr>
-              <tr>
-                <td class="col-label">Automatización</td>
-                <td class="col-bad">Reglas manuales en firewalls físicos</td>
-                <td class="col-good">API REST — políticas como código (IaC)</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="slide-footer">
-          <span>Beneficios: Red Tradicional vs. NSX con Microsegmentación</span>
-          <span class="exp-badge exp3">EXP 03</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 19 · INDUSTRIA ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag green">Adopción Real</div>
-          <h2 class="title" style="margin-bottom:6px;">Adopción en la Industria — vDefend y VMware Cloud Foundation</h2>
-          <div class="vdefend-badge" style="margin-bottom:14px;">Desde 2023 (Broadcom): NSX DFW rebautizado como VMware vDefend · Integrado en VMware Cloud Foundation (VCF)</div>
-          <div class="grid-2" style="gap:10px;">
-            <div class="industry-card">
-              <div class="industry-icon">🏦</div>
-              <div class="industry-title">Banca y Finanzas</div>
-              <div class="industry-body">Aislamiento de sistemas de pagos. Cumplimiento PCI-DSS. Protección de datos de clientes y tarjetas de crédito.</div>
-            </div>
-            <div class="industry-card">
-              <div class="industry-icon">🏥</div>
-              <div class="industry-title">Salud (Healthcare)</div>
-              <div class="industry-body">Protección de registros médicos electrónicos. Cumplimiento HIPAA. Segmentación de dispositivos IoT médicos.</div>
-            </div>
-            <div class="industry-card">
-              <div class="industry-icon">🏛️</div>
-              <div class="industry-title">Gobierno y Defensa</div>
-              <div class="industry-body">Zonas de seguridad clasificadas. Cumplimiento NIST. Redes Zero Trust para datos sensibles.</div>
-            </div>
-            <div class="industry-card">
-              <div class="industry-icon">📡</div>
-              <div class="industry-title">Telecomunicaciones</div>
-              <div class="industry-body">Segmentación de infraestructura 5G. NFV (Network Function Virtualization). Multi-tenant seguro.</div>
-            </div>
-          </div>
-        </div>
-        <div class="slide-footer">
-          <span>Adopción en la Industria — vDefend y VMware Cloud Foundation</span>
-          <span class="exp-badge exp3">EXP 03</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 20 · GLOSARIO ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag green">Referencia</div>
-          <h2 class="title" style="margin-bottom:14px;">Glosario de Siglas y Términos Clave</h2>
-          <div class="gloss-grid">
-            <div class="gloss-item"><span class="gloss-term">SDN</span><span class="gloss-def">Software-Defined Networking — Redes Definidas por Software</span></div>
-            <div class="gloss-item"><span class="gloss-term">VM</span><span class="gloss-def">Virtual Machine — Máquina Virtual</span></div>
-            <div class="gloss-item"><span class="gloss-term">NSX</span><span class="gloss-def">Network and Security Exchange — Plataforma SDN de VMware</span></div>
-            <div class="gloss-item"><span class="gloss-term">vNIC</span><span class="gloss-def">Virtual Network Interface Card — Interfaz de red virtual de una VM</span></div>
-            <div class="gloss-item"><span class="gloss-term">DFW</span><span class="gloss-def">Distributed Firewall — Firewall Distribuido en el hipervisor</span></div>
-            <div class="gloss-item"><span class="gloss-term">VXLAN</span><span class="gloss-def">Virtual Extensible LAN — Protocolo de encapsulamiento overlay</span></div>
-            <div class="gloss-item"><span class="gloss-term">NV</span><span class="gloss-def">Network Virtualization — Virtualización de Red</span></div>
-            <div class="gloss-item"><span class="gloss-term">N-VDS</span><span class="gloss-def">NSX Virtual Distributed Switch — Switch virtual distribuido de NSX</span></div>
-            <div class="gloss-item"><span class="gloss-term">SDDC</span><span class="gloss-def">Software-Defined Data Center — Centro de Datos Definido por Software</span></div>
-            <div class="gloss-item"><span class="gloss-term">VCF</span><span class="gloss-def">VMware Cloud Foundation — Stack unificado (vSphere + NSX + vSAN)</span></div>
-            <div class="gloss-item"><span class="gloss-term">IaC</span><span class="gloss-def">Infrastructure as Code — Infraestructura como Código</span></div>
-            <div class="gloss-item"><span class="gloss-term">NFV</span><span class="gloss-def">Network Function Virtualization — Virtualización de Funciones de Red</span></div>
-          </div>
-        </div>
-        <div class="slide-footer">
-          <span>Glosario de Siglas y Términos Clave</span>
-          <span class="exp-badge exp3">EXP 03</span>
-        </div>
-      </div>
-
-      <!-- ── SLIDE 21 · CONCLUSIONES ── -->
-      <div class="slide">
-        <div class="slide-inner pad-sm">
-          <div class="slide-tag green">Cierre</div>
-          <h2 class="title" style="margin-bottom:14px;">Conclusiones</h2>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <div class="conclusion-item">
-              <div class="conclusion-num">1</div>
-              <div class="conclusion-text">NSX transforma la red en código: flexible, automatizable y segura por diseño. El Software-Defined Data Center en su forma más completa.</div>
-            </div>
-            <div class="conclusion-item">
-              <div class="conclusion-num">2</div>
-              <div class="conclusion-text">La microsegmentación resuelve el problema del tráfico Este-Oeste que los firewalls perimetrales no pueden controlar. Un servidor comprometido ya no se propaga.</div>
-            </div>
-            <div class="conclusion-item">
-              <div class="conclusion-num">3</div>
-              <div class="conclusion-text">Zero Trust con NSX no es teoría académica — el DFW (vDefend) lo implementa en producción en miles de empresas de banca, salud, telecomunicaciones y gobierno.</div>
-            </div>
-            <div class="conclusion-item">
-              <div class="conclusion-num">4</div>
-              <div class="conclusion-text">El resultado: menor superficie de ataque, contención automática de amenazas y cumplimiento normativo simplificado (GDPR, HIPAA, PCI-DSS).</div>
-            </div>
-          </div>
-          <div class="quote-block" style="margin-top:12px;">¿Puede su empresa permitirse no tener microsegmentación en un mundo donde los ataques de ransomware cuestan millones por incidente?</div>
-        </div>
-        <div class="slide-footer">
-          <span>Conclusiones · ITM · Facultad de Ingeniería · SDN</span>
-          <span class="exp-badge exp3">EXP 03</span>
-        </div>
-      </div>
-
-      <!-- KBD HINT -->
-      <div id="kbd-hint">
-        <kbd>←</kbd><kbd>→</kbd> navegar &nbsp;|&nbsp; <kbd>F</kbd> pantalla completa &nbsp;|&nbsp; <kbd>N</kbd> notas
-      </div>
-    </div><!-- /stage -->
-
-    <!-- NOTES PANEL -->
-    <div id="notes-panel" class="collapsed">
-      <div id="notes-header">Notas del Expositor</div>
-      <div id="notes-content"></div>
+      <div class="slide-footer"><span>Grupos y Políticas en NSX Manager</span><span class="exp-badge exp2">EXP 02</span></div>
     </div>
 
-  </div><!-- /main -->
+    <!-- SLIDE 15 · SECCIÓN 03 -->
+    <div class="slide section-slide">
+      <div class="slide-inner" style="justify-content:center">
+        <div class="section-num green">03</div>
+        <h2 class="title" style="margin-top:12px">Caso Práctico y Beneficios</h2>
+        <p class="body" style="margin-top:8px">Ransomware, impacto real en la industria y conclusiones</p>
+      </div>
+      <div class="slide-footer"><span>Sección 03</span><span class="exp-badge exp3">EXP 03</span></div>
+    </div>
+
+    <!-- SLIDE 16 · RANSOMWARE -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag green">Caso Práctico</div>
+        <h2 class="title" style="margin-bottom:14px">Contención de Ransomware con NSX</h2>
+        <div class="step-flow">
+          <div class="step-card danger">
+            <div class="step-num" style="color:var(--red)">PASO 1 ⚠</div>
+            <div class="step-title">Infección inicial</div>
+            <div class="step-body">El ransomware entra por un email de phishing al Web Server (tráfico Norte-Sur). El firewall perimetral lo permite porque viene disfrazado de tráfico legítimo.</div>
+          </div>
+          <div class="step-card warning">
+            <div class="step-num" style="color:var(--yellow)">PASO 2 →</div>
+            <div class="step-title">Intento de movimiento lateral</div>
+            <div class="step-body">El ransomware escanea la red local. Encuentra el App Server y la Base de Datos en la misma red. En una red tradicional, simplemente se conecta y los cifra.</div>
+          </div>
+          <div class="step-card info">
+            <div class="step-num" style="color:var(--accent)">PASO 3 🛡</div>
+            <div class="step-title">NSX DFW bloquea</div>
+            <div class="step-body">El DFW en la vNIC deniega el tráfico no autorizado Este-Oeste. No existe regla que permita Web→DB por puerto 445 (SMB). La política <em>default deny</em> bloquea el paquete.</div>
+          </div>
+          <div class="step-card success">
+            <div class="step-num" style="color:var(--green)">PASO 4 ✓</div>
+            <div class="step-title">Contención exitosa</div>
+            <div class="step-body">Solo el Web Server comprometido. App Server y Base de Datos intactos. NSX Intelligence genera el flow log con el rastro exacto del ataque.</div>
+          </div>
+        </div>
+        <div class="quote-block" style="margin-top:12px">"Sin NSX: un servidor comprometido puede cifrar todo el datacenter. Con NSX: un servidor comprometido es exactamente eso, <strong>solo uno</strong>."</div>
+      </div>
+      <div class="slide-footer"><span>Caso Práctico: Contención de Ransomware</span><span class="exp-badge exp3">EXP 03</span></div>
+    </div>
+
+    <!-- SLIDE 17 · APP 3 CAPAS -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag green">Arquitectura de Referencia</div>
+        <h2 class="title" style="margin-bottom:14px">Aplicación de 3 Capas — Políticas de Microsegmentación</h2>
+        <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:14px">
+          <div style="text-align:center;padding:10px 14px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px)">
+            <div style="font-weight:700;color:var(--accent2)">🌐 Internet</div>
+            <div style="font-size:10px;color:var(--text3)">Usuario</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;padding:0 8px">
+            <div style="font-size:10px;color:var(--green);font-weight:700">✓ TCP:443</div>
+            <div style="color:var(--text3)">→</div>
+            <div style="font-size:9px;color:var(--text3)">DFW</div>
+          </div>
+          <div style="text-align:center;padding:10px 14px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px)">
+            <div style="font-weight:700;color:var(--accent)">Web Tier</div>
+            <div style="font-size:10px;color:var(--text3)">Nginx / Apache</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;padding:0 8px">
+            <div style="font-size:10px;color:var(--green);font-weight:700">✓ TCP:8080</div>
+            <div style="color:var(--text3)">→</div>
+            <div style="font-size:9px;color:var(--text3)">DFW</div>
+          </div>
+          <div style="text-align:center;padding:10px 14px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px)">
+            <div style="font-weight:700;color:var(--accent3)">App Tier</div>
+            <div style="font-size:10px;color:var(--text3)">Business Logic</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;padding:0 8px">
+            <div style="font-size:10px;color:var(--green);font-weight:700">✓ TCP:5432</div>
+            <div style="color:var(--text3)">→</div>
+            <div style="font-size:9px;color:var(--text3)">DFW</div>
+          </div>
+          <div style="text-align:center;padding:10px 14px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px)">
+            <div style="font-weight:700;color:var(--green)">DB Tier</div>
+            <div style="font-size:10px;color:var(--text3)">PostgreSQL</div>
+          </div>
+        </div>
+        <div style="padding:10px 16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px);margin-bottom:10px">
+          <strong style="color:var(--red)">✕ Web→DB bloqueado</strong> — Escenario de ataque: si el Web Tier es comprometido, el atacante intenta llegar directamente a DB Tier saltando App Tier. El DFW deniega la conexión porque no existe una política que la autorice.
+        </div>
+        <div class="grid-3" style="font-size:clamp(9px,1vw,12px)">
+          <div class="card green-border"><div class="card-title">Principio aplicado</div><div class="card-body">Mínimo privilegio: cada capa solo habla con la siguiente, nunca con capas no adyacentes.</div></div>
+          <div class="card accent-border"><div class="card-title">Resultado</div><div class="card-body">Compromiso del Web Tier no implica acceso a la base de datos ni a datos sensibles.</div></div>
+          <div class="card purple-border"><div class="card-title">Diferenciador clave</div><div class="card-body">No importa que estén en la misma VLAN. Cada VM está protegida individualmente por el DFW.</div></div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>Aplicación de 3 Capas — Microsegmentación</span><span class="exp-badge exp3">EXP 03</span></div>
+    </div>
+
+    <!-- SLIDE 18 · COMPARATIVA -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag green">Beneficios</div>
+        <h2 class="title" style="margin-bottom:14px">Red Tradicional vs. NSX con Microsegmentación</h2>
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Aspecto</th>
+              <th class="th-bad">Red Tradicional</th>
+              <th class="th-good">VMware NSX</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="col-label">Superficie de ataque</td><td class="col-bad">Toda la VLAN expuesta si hay una brecha</td><td class="col-good">Solo la VM comprometida, el resto aislado</td></tr>
+            <tr><td class="col-label">Tiempo de contención</td><td class="col-bad">Horas o días (detección y reglas manuales)</td><td class="col-good">Segundos (DFW aplica políticas automáticamente)</td></tr>
+            <tr><td class="col-label">Cambios de red física</td><td class="col-bad">Re-cablear, nueva VLAN, downtime</td><td class="col-good">Cero cambios en la red física subyacente</td></tr>
+            <tr><td class="col-label">Visibilidad E-O</td><td class="col-bad">Ninguna — tráfico lateral invisible</td><td class="col-good">100% — NSX registra cada flujo Este-Oeste</td></tr>
+            <tr><td class="col-label">Cumplimiento normativo</td><td class="col-bad">Difícil auditar zonas en red plana</td><td class="col-good">Políticas documentadas: GDPR, HIPAA, PCI-DSS</td></tr>
+            <tr><td class="col-label">Automatización</td><td class="col-bad">Reglas manuales en firewalls físicos</td><td class="col-good">API REST — políticas como código (IaC)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="slide-footer"><span>Beneficios: Red Tradicional vs. NSX</span><span class="exp-badge exp3">EXP 03</span></div>
+    </div>
+
+    <!-- SLIDE 19 · ADOPCIÓN INDUSTRIA -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag green">Adopción en la Industria</div>
+        <h2 class="title" style="margin-bottom:6px">Adopción en la Industria — vDefend y VMware Cloud Foundation</h2>
+        <p style="font-size:clamp(9px,1vw,12px);color:var(--text3);margin-bottom:14px">Desde 2023 (Broadcom), el NSX DFW se rebautizó como <strong style="color:var(--green)">VMware vDefend</strong> · integrado en VMware Cloud Foundation (VCF)</p>
+        <div class="grid-2">
+          <div class="industry-card">
+            <div class="industry-icon">🏦</div>
+            <div class="industry-title">Banca y Finanzas</div>
+            <div class="industry-body">Aislamiento de sistemas de pagos. Cumplimiento PCI-DSS. Protección de datos de clientes y tarjetas de crédito.</div>
+          </div>
+          <div class="industry-card">
+            <div class="industry-icon">🏥</div>
+            <div class="industry-title">Salud (Healthcare)</div>
+            <div class="industry-body">Protección de registros médicos electrónicos. Cumplimiento HIPAA. Segmentación de dispositivos IoT médicos.</div>
+          </div>
+          <div class="industry-card">
+            <div class="industry-icon">🏛</div>
+            <div class="industry-title">Gobierno y Defensa</div>
+            <div class="industry-body">Zonas de seguridad clasificadas. Cumplimiento NIST. Redes Zero Trust para datos sensibles del estado.</div>
+          </div>
+          <div class="industry-card">
+            <div class="industry-icon">📡</div>
+            <div class="industry-title">Telecomunicaciones</div>
+            <div class="industry-body">Segmentación de infraestructura 5G. NFV (Network Function Virtualization). Multi-tenant seguro para slices de red.</div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>Adopción en la Industria — vDefend y VCF</span><span class="exp-badge exp3">EXP 03</span></div>
+    </div>
+
+    <!-- SLIDE 20 · GLOSARIO -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag green">Referencia</div>
+        <h2 class="title" style="margin-bottom:14px">Glosario de Siglas y Términos Clave</h2>
+        <div class="gloss-grid">
+          <div class="gloss-item"><span class="gloss-term">SDN</span><span class="gloss-def">Software-Defined Networking — Redes Definidas por Software</span></div>
+          <div class="gloss-item"><span class="gloss-term">VM</span><span class="gloss-def">Virtual Machine — Máquina Virtual</span></div>
+          <div class="gloss-item"><span class="gloss-term">NSX</span><span class="gloss-def">Network and Security Exchange — Plataforma SDN de VMware</span></div>
+          <div class="gloss-item"><span class="gloss-term">vNIC</span><span class="gloss-def">Virtual Network Interface Card — Interfaz de red virtual de una VM</span></div>
+          <div class="gloss-item"><span class="gloss-term">DFW</span><span class="gloss-def">Distributed Firewall — Firewall Distribuido en el hipervisor</span></div>
+          <div class="gloss-item"><span class="gloss-term">VXLAN</span><span class="gloss-def">Virtual Extensible LAN — Protocolo de encapsulamiento overlay</span></div>
+          <div class="gloss-item"><span class="gloss-term">NV</span><span class="gloss-def">Network Virtualization — Virtualización de Red</span></div>
+          <div class="gloss-item"><span class="gloss-term">N-VDS</span><span class="gloss-def">NSX Virtual Distributed Switch — Switch virtual distribuido de NSX</span></div>
+          <div class="gloss-item"><span class="gloss-term">SDDC</span><span class="gloss-def">Software-Defined Data Center — Centro de Datos Definido por Software</span></div>
+          <div class="gloss-item"><span class="gloss-term">VCP</span><span class="gloss-def">VMware Certified Professional — Certificación profesional de VMware</span></div>
+          <div class="gloss-item"><span class="gloss-term">VCF</span><span class="gloss-def">VMware Cloud Foundation — Stack unificado (vSphere + NSX + vSAN)</span></div>
+          <div class="gloss-item"><span class="gloss-term">IaC</span><span class="gloss-def">Infrastructure as Code — Infraestructura como Código</span></div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>Glosario de Siglas y Términos Clave</span><span class="exp-badge exp3">EXP 03</span></div>
+    </div>
+
+    <!-- SLIDE 21 · CONCLUSIONES -->
+    <div class="slide">
+      <div class="slide-inner pad-sm">
+        <div class="slide-tag green">Cierre</div>
+        <h2 class="title" style="margin-bottom:16px">Conclusiones</h2>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+          <div class="conclusion-item">
+            <div class="conclusion-num" style="color:var(--accent)">01</div>
+            <div class="conclusion-text">NSX <strong style="color:var(--text)">transforma la red en código</strong>: flexible, automatizable y segura por diseño. El Software-Defined Data Center en su forma más completa.</div>
+          </div>
+          <div class="conclusion-item">
+            <div class="conclusion-num" style="color:var(--accent3)">02</div>
+            <div class="conclusion-text">La <strong style="color:var(--text)">microsegmentación resuelve el tráfico Este-Oeste</strong> que los firewalls perimetrales no pueden controlar. Un servidor comprometido ya no puede propagarse.</div>
+          </div>
+          <div class="conclusion-item">
+            <div class="conclusion-num" style="color:var(--green)">03</div>
+            <div class="conclusion-text"><strong style="color:var(--text)">Zero Trust con NSX no es teoría</strong> — el DFW (vDefend) lo implementa en producción en miles de empresas: banca, salud, telecomunicaciones y gobierno.</div>
+          </div>
+        </div>
+        <div style="padding:12px 18px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:8px;font-size:clamp(11px,1.2vw,14px);color:var(--text2);text-align:center">
+          En un mundo donde los ataques de ransomware cuestan millones por incidente,<br>
+          <strong style="color:var(--text)">¿puede su empresa permitirse no tener microsegmentación?</strong>
+        </div>
+        <p style="text-align:center;margin-top:14px;font-size:clamp(12px,1.3vw,16px);color:var(--text3)">Muchas gracias · <strong style="color:var(--text2)">¿Preguntas?</strong></p>
+      </div>
+      <div class="slide-footer"><span>ITM · Facultad de Ingeniería · SDN · Exposición No. 6</span><span class="exp-badge exp3">EXP 03</span></div>
+    </div>
+
+  </div><!-- /stage -->
+
+  <!-- NOTES PANEL -->
+  <div id="notes-panel" class="collapsed">
+    <div id="notes-header">📋 Notas del Expositor</div>
+    <div id="notes-content"></div>
+  </div>
+
+</div><!-- /main -->
 </div><!-- /app -->
 
 <script>
 const SLIDES = [
-  { title: 'Portada', notes: 'Buenos días / buenas tardes a todos. Hoy el equipo presenta la Exposición Número 6 del curso de Redes SDN: VMware NSX, la plataforma líder para virtualización de redes en centros de datos, y cómo se usa para implementar seguridad de Confianza Cero (Zero Trust).\n\nLa presentación se divide en tres bloques: contexto y fundamentos (Exp. 1), arquitectura técnica y microsegmentación (Exp. 2), y caso práctico con beneficios reales (Exp. 3).' },
-  { title: 'Agenda', notes: 'Señalen el nombre de cada expositor en la agenda mientras lo presentan. Esto genera credibilidad y organiza al auditorio.\n\nDuración total: ~60 minutos. Distribuidos en 18 + 22 + 20 minutos aproximadamente.' },
-  { title: 'Sección 01 — Contexto', notes: 'Slide de transición. Momento para que el Expositor 1 tome el control de la presentación si hay cambio de orador.' },
-  { title: '¿Qué es VMware?', notes: 'VMware fue fundada en 1998 en Palo Alto, California. En ese momento, los servidores físicos solo podían correr un SO a la vez, subutilizando el hardware.\n\nEn 2001 lanzaron ESX Server — el hipervisor bare-metal. En 2012 llegó NSX, completando el SDDC. En 2023, Broadcom adquirió VMware y consolidó todo en VMware Cloud Foundation.\n\n💡 Si tienes la certificación VCP, mencionarla aquí añade credibilidad personal.' },
-  { title: 'Evolución NSX', notes: 'NSX-V (2012–2022): atado a vSphere, solo ESXi. Descontinuado.\n\nNSX-T (2017): agnóstico de hipervisor, soporta KVM, containers, multi-cloud. API-first.\n\nNSX actual (2022–hoy): simplemente "NSX". El DFW rebautizado como VMware vDefend tras adquisición de Broadcom.\n\n💡 Si alguien pregunta por NSX-D: es una variante para VMware Cloud on AWS.' },
-  { title: 'Virtualización de Red', notes: 'En red tradicional, configurar dos VMs puede tomar días o semanas: switches físicos, VLANs, cableado, intervención del equipo de networking.\n\nCon NSX, la red es software: switches, routers y firewalls como instancias de software en el hipervisor. Se crean en segundos vía API, sin tocar un solo switch físico.\n\n🗣️ Frase clave: "Con NSX, la red es código. Se puede crear, mover, clonar y eliminar junto con las máquinas virtuales."' },
-  { title: 'Tráfico N-S vs E-O', notes: 'Tráfico Norte-Sur: entra/sale del datacenter desde internet. El firewall perimetral lo controla bien.\n\nTráfico Este-Oeste: movimiento lateral entre servidores dentro del datacenter. Nunca sale → el firewall perimetral no lo ve.\n\nProblema: un atacante que compromete una VM puede moverse libremente entre todas las VMs de la misma VLAN. Este movimiento lateral es el vector principal del ransomware moderno.\n\n💡 Señalar el diagrama mientras se explica — el visual es muy efectivo.' },
-  { title: 'Video Introductorio', notes: 'Reproducir el video de YouTube: youtube.com/watch?v=YUsUUIRHDLU (~5 min)\n\nEste video muestra NSX en acción con la interfaz real del NSX Manager y cómo se configura la microsegmentación en una aplicación de tres capas.\n\n⚠️ Tener la URL probada y abierta antes de la exposición para evitar delays.' },
-  { title: 'Sección 02 — Arquitectura', notes: 'Slide de transición. Turno del Expositor 2.\n\nRetomar desde donde terminó el Expositor 1: el problema del tráfico Este-Oeste sin protección. Ahora vamos a ver cómo NSX lo resuelve a nivel arquitectónico.' },
-  { title: 'Arquitectura NSX', notes: 'NSX tiene arquitectura en dos planos (igual que cualquier sistema SDN):\n\n1. Plano de Control/Gestión → NSX Manager: cerebro centralizado, define políticas, las distribuye por API REST.\n\n2. Plano de Datos → vive en los hipervisores: N-VDS (switch virtual) y DFW aplicando políticas en cada vNIC.\n\nClave: la red física subyacente NO cambia. NSX usa VXLAN para crear redes overlay.\n\n🗣️ "NSX Manager define las políticas una sola vez. Los hipervisores las aplican de forma distribuida en cada VM."' },
-  { title: 'DFW — Guardián por VM', notes: 'DFW vs firewall tradicional: el firewall tradicional es centralizado — todo el tráfico a inspeccionar debe pasar por él (hair-pinning = latencia).\n\nDFW: integrado en el kernel del hipervisor, aplica políticas en la vNIC de cada VM antes de que el paquete salga. Cada VM tiene su propio firewall personal.\n\nCaracterísticas: stateful L2-L7, reglas por atributos de VM (no solo IP), sigue a la VM en vMotion, opera a line-rate.\n\n💡 Analogía: si el firewall perimetral es el guardia de la puerta del edificio, el DFW es un guardaespaldas personal que acompaña a cada servidor.' },
-  { title: 'Microsegmentación', notes: 'Segmentación tradicional: por VLAN. Dentro de la misma VLAN, todos los servidores se comunican libremente — problema enorme.\n\nMicrosegmentación: divide el datacenter en zonas de seguridad hasta el nivel de la VM individual. Cada VM puede tener su propia política única, independientemente de la VLAN o el servidor físico.\n\nPráctica: Web Server solo puede hablar con App Server por puerto 8080. App Server solo con DB por puerto 5432. Si el Web Server es comprometido, no puede llegar a la DB — no hay regla que lo autorice.\n\n🗣️ Señalar el diagrama del edificio vs hotel — el visual es muy impactante.' },
-  { title: 'Zero Trust', notes: 'Zero Trust fue propuesto por John Kindervag de Forrester Research en 2010. Hoy es el estándar de la industria.\n\nModelo tradicional: si estás dentro de la red corporativa, se asume confianza. Zero Trust elimina esa suposición completamente.\n\nTres pilares:\n1. Verificar explícitamente: toda la info disponible (identidad, dispositivo, ubicación).\n2. Mínimo privilegio: solo acceso a lo estrictamente necesario.\n3. Asumir brecha: diseñar asumiendo que ya hay un atacante adentro.\n\nNSX implementa estos tres principios: DFW verifica cada paquete, microsegmentación = mínimo privilegio, arquitectura distribuida = asumir brecha.' },
-  { title: 'Políticas NSX Manager', notes: 'Dos pasos para crear políticas en NSX:\n\n1. Grupos de Seguridad: colecciones dinámicas de VMs por criterios (nombre, tag, SO, IP). Dinámicos: nueva VM con el tag correcto hereda las políticas automáticamente.\n\n2. Políticas de DFW: reglas de arriba a abajo, más específica a más general. Origen → Destino → Servicio → Acción (Allow/Deny).\n\nModelo whitelist: todo bloqueado por defecto. Solo se permite lo explícitamente autorizado. Eso es la esencia del Zero Trust.\n\n💡 Si hay acceso a un ambiente NSX de laboratorio, mostrar la UI real es muy impactante.' },
-  { title: 'Sección 03 — Caso Práctico', notes: 'Slide de transición. Turno del Expositor 3.\n\nVamos a cerrar con lo más importante para entender el valor real de NSX: un caso práctico concreto de cómo la microsegmentación detendría un ataque de ransomware.' },
-  { title: 'Caso Práctico: Ransomware', notes: 'Paso 1: Phishing → Web Server. Tráfico Norte-Sur, firewall perimetral lo deja pasar (parece legítimo).\n\nPaso 2: El ransomware escanea la red. En red tradicional sin control E-O, se conecta y cifra todo.\n\nPaso 3: DFW en la vNIC del Web Server analiza el paquete hacia el App Server. Busca regla que permita el puerto 445 (SMB de Windows que usa el ransomware). No existe → Default Deny lo bloquea.\n\nPaso 4: Solo el Web Server comprometido. App Server y DB intactos. NSX Intelligence genera alerta con flow log.\n\n📊 Dato: Mandiant/CrowdStrike reportan 21 días de permanencia promedio de atacantes. Microsegmentación convierte ese mes en segundos de contención.' },
-  { title: 'App de 3 Capas', notes: 'Arquitectura clásica empresarial: Web Tier (DMZ), App Tier (lógica de negocio), DB Tier (datos).\n\nCada DFW entre capas es un punto de control:\n- Internet → Web: TCP:443 (HTTPS)\n- Web → App: TCP:8080\n- App → DB: TCP:5432 (PostgreSQL)\n\nEscenario del atacante: compromete Web Tier, intenta saltar directamente a DB Tier. DFW en la vNIC de la DB busca regla Web→DB → no existe → bloqueado inmediatamente.\n\nEsto es diferente a otros controles: no importa que estén en la misma VLAN. Cada VM está protegida individualmente.' },
-  { title: 'Comparativa', notes: 'Los 6 beneficios clave para resumir:\n\n1. Superficie de ataque: VLAN completa vs solo VM comprometida.\n2. Tiempo de contención: horas/días vs segundos.\n3. Red física: re-cableado y downtime vs cero cambios.\n4. Visibilidad E-O: ninguna vs 100% con flow logs.\n5. Cumplimiento: difícil auditar vs políticas documentadas (GDPR, HIPAA, PCI-DSS).\n6. Automatización: manual vs API REST + IaC.' },
-  { title: 'Adopción en la Industria', notes: 'NSX no es teoría académica: es la plataforma de virtualización de red más adoptada en datacenters empresariales del mundo.\n\nBanca: aislamiento de sistemas de pago, cumplimiento PCI-DSS.\nSalud: protección de EMR, cumplimiento HIPAA, IoT médico.\nTelecomunicaciones: clave en 5G, NFV (relevante para este auditorio de telecomunicaciones).\nGobierno: zonas clasificadas, cumplimiento NIST.\n\nDesde 2023: NSX DFW rebautizado como VMware vDefend en la documentación de Broadcom.' },
-  { title: 'Glosario', notes: 'Repaso rápido del vocabulario técnico usado durante la presentación.\n\nPuntos clave a mencionar:\n- NSX: Network and Security Exchange\n- DFW: Distributed Firewall (vive en el kernel del hipervisor)\n- N-VDS: el switch virtual de NSX\n- VXLAN: el protocolo de encapsulamiento que permite las redes overlay\n- VCF: el stack completo actual de VMware/Broadcom\n- IaC: la filosofía de automatización via API/código' },
-  { title: 'Conclusiones', notes: 'Tres pilares del cierre:\n\n1. NSX transforma la red en código — el SDDC completo.\n2. Microsegmentación resuelve el tráfico Este-Oeste — problema que los firewalls perimetrales no pueden resolver.\n3. Zero Trust con NSX es implementación real en producción — no teoría académica.\n\nPregunta de cierre para el auditorio:\n"¿Puede su empresa permitirse no tener microsegmentación en un mundo donde los ataques de ransomware cuestan millones por incidente?"\n\nPausa natural aquí. Abrir espacio para preguntas del auditorio.' },
+  { title: "Portada", notes: "Buenos días / buenas tardes. Presentación No. 6 del curso de Redes SDN. Tema: VMware NSX, plataforma líder para virtualización de redes en centros de datos, y cómo se usa para implementar Zero Trust.\n\nMenciona tu certificación VCP si aplica. Señala el nombre de cada expositor en la agenda." },
+  { title: "Agenda", notes: "Tres bloques: Expositor 1 contextualiza (~18 min), Expositor 2 explica la arquitectura técnica (~22 min), Expositor 3 presenta el caso práctico (~20 min). Total: ~60 minutos." },
+  { title: "Sección 01 — Contexto VMware & SDN", notes: "Slide de transición. Introduce el bloque del Expositor 1." },
+  { title: "¿Qué es VMware?", notes: "VMware fundada en 1998 en Palo Alto. En 2001 lanzaron ESX Server, el hipervisor bare-metal. El portafolio creció: vSphere, vSAN, NSX. En 2023 Broadcom adquirió VMware y consolidó todo en VMware Cloud Foundation (VCF).\n\n'VMware convirtió la infraestructura física en software. Servidores primero, luego almacenamiento, y con NSX, la red completa.'" },
+  { title: "Evolución NSX-V → NSX-T → NSX", notes: "NSX-V (2012): atado a vSphere, descontinuado en 2022.\nNSX-T (2017): agnóstico del hipervisor, API-first, multi-cloud.\nNSX / vDefend (2022–hoy): nombre unificado, parte de VCF, DFW renombrado a vDefend.\n\nSi alguien pregunta por NSX-D: es una variante para VMware Cloud on AWS." },
+  { title: "Virtualización de Red (NV)", notes: "En una red tradicional, cambios toman días o semanas y requieren intervención del equipo de networking. NSX cambia eso: la red se convierte en software.\n\n'Con NSX, la red es código. Se puede crear, mover, clonar y eliminar junto con las máquinas virtuales.'" },
+  { title: "Tráfico Norte-Sur vs. Este-Oeste", notes: "Tráfico Norte-Sur: entra y sale del datacenter. El firewall perimetral lo controla bien.\n\nTráfico Este-Oeste: movimiento lateral entre servidores dentro del datacenter. El firewall perimetral NO lo ve.\n\nSi un atacante compromete una VM, puede moverse libremente entre todas las VMs de la misma VLAN. Ese es el vector principal de ransomware moderno.\n\nSeñala el diagrama mientras explicas." },
+  { title: "Video Introductorio", notes: "Video de ~5 minutos que muestra NSX en acción. Demostración de la interfaz real del NSX Manager y cómo se configura la microsegmentación en una aplicación de tres capas.\n\n⚠ Verificar que el video cargue correctamente antes de la exposición." },
+  { title: "Sección 02 — Arquitectura NSX", notes: "Slide de transición. Introduce el bloque del Expositor 2." },
+  { title: "Arquitectura NSX: Planos de Control y Datos", notes: "NSX tiene arquitectura en dos planos:\n\n1. Plano de Control y Gestión: NSX Manager. Cerebro centralizado. Define políticas por GUI o API REST.\n\n2. Plano de Datos: vive en los hipervisores. Cada servidor físico tiene el agente NSX en su kernel. Ahí se aplican las políticas en el N-VDS y el DFW.\n\nLa red física no necesita cambiar. NSX usa encapsulamiento VXLAN para crear redes overlay.\n\n'NSX Manager define las políticas una sola vez. Los hipervisores las aplican de forma distribuida en cada VM.'" },
+  { title: "NSX Distributed Firewall (DFW)", notes: "El DFW está integrado directamente en el kernel del hipervisor. Aplica políticas en la vNIC de cada VM, antes de que el paquete siquiera salga de esa VM.\n\nCaracterísticas: stateful, L2–L7, reglas por atributos de VM (no solo IP), se mueve con la VM en vMotion.\n\nAnalogía: si el firewall perimetral es el guardia de la puerta del edificio, el DFW es un guardaespaldas personal que acompaña a cada servidor a donde vaya." },
+  { title: "Microsegmentación", notes: "En redes tradicionales, la segmentación es por VLAN. Dentro de la misma VLAN, todos los servidores pueden hablar libremente.\n\nMicrosegmentación: divide el datacenter en zonas de seguridad hasta el nivel de la VM individual. Cada VM puede tener su propia política única.\n\nAnálogía: edificio con un guardia en la puerta (red tradicional) vs. hotel donde cada habitación tiene su propia cerradura (microsegmentación)." },
+  { title: "Principios de Zero Trust", notes: "Zero Trust fue propuesto por John Kindervag de Forrester Research en 2010. Hoy es el estándar de la industria.\n\nPrincipio fundamental: nunca confiar, siempre verificar.\n\nTres pilares:\n1. Verificar explícitamente: identidad, dispositivo, ubicación.\n2. Mínimo privilegio: solo acceso a lo estrictamente necesario.\n3. Asumir brecha: diseñar asumiendo que ya hay un atacante adentro.\n\nNSX implementa los tres de forma nativa." },
+  { title: "Grupos y Políticas en NSX Manager", notes: "Dos pasos para crear políticas:\n\n1. Grupos de Seguridad dinámicos: colecciones de VMs por criterios (nombre, tag, SO, IP). Si lanzas una nueva VM con el tag correcto, hereda las políticas automáticamente.\n\n2. Políticas DFW: reglas de arriba a abajo, de más específica a más general. Modelo whitelist: todo bloqueado por defecto.\n\nSi tienen acceso a un ambiente NSX de laboratorio, es muy impactante mostrar la UI real." },
+  { title: "Sección 03 — Caso Práctico y Beneficios", notes: "Slide de transición. Introduce el bloque del Expositor 3." },
+  { title: "Caso Práctico: Contención de Ransomware", notes: "Paso 1: Infección por phishing al Web Server. El firewall perimetral lo permite.\nPaso 2: El ransomware intenta propagarse al App Server y DB por la red interna.\nPaso 3: El DFW en la vNIC deniega el tráfico no autorizado (no hay regla para Web→DB por puerto 445 SMB).\nPaso 4: Solo el Web Server comprometido. El resto intacto.\n\nDato real: según Mandiant y CrowdStrike, el tiempo promedio de permanencia de un atacante antes de ser detectado es de 21 días. La microsegmentación convierte ese mes de movimiento libre en segundos de contención." },
+  { title: "Aplicación de 3 Capas", notes: "Arquitectura clásica: Web Tier → App Tier → DB Tier.\n\nCada DFW entre capas actúa como punto de control:\n- Internet → Web: solo TCP:443\n- Web → App: solo TCP:8080\n- App → DB: solo TCP:5432\n\nEscenario de ataque: Web comprometido intenta conectarse directamente a DB. El DFW en la vNIC de DB busca una regla Web→DB, no encuentra ninguna, bloquea.\n\nNo importa que estén en la misma VLAN. Cada VM está protegida individualmente." },
+  { title: "Beneficios: Red Tradicional vs. NSX", notes: "Seis beneficios clave:\n1. Superficie de ataque: solo la VM comprometida, no toda la VLAN.\n2. Tiempo de contención: segundos vs. horas o días.\n3. Sin cambios en la red física: cero downtime de implementación.\n4. Visibilidad completa del tráfico Este-Oeste: NSX Intelligence con ML.\n5. Cumplimiento normativo: GDPR, HIPAA, PCI-DSS simplificados.\n6. Automatización: API REST, Infrastructure as Code." },
+  { title: "Adopción en la Industria — vDefend y VCF", notes: "NSX es la plataforma de virtualización de red más adoptada en datacenters empresariales del mundo.\n\nBanca: cumplimiento PCI-DSS, aislamiento de sistemas de pagos.\nSalud: cumplimiento HIPAA, protección de registros médicos, segmentación de IoT médico.\nGobierno: cumplimiento NIST, zonas clasificadas.\nTelecomunicaciones: infraestructura 5G, NFV, multi-tenant.\n\nNomenclatura actualizada: desde Broadcom 2023, el DFW se llama VMware vDefend." },
+  { title: "Glosario de Siglas y Términos Clave", notes: "Repaso rápido del vocabulario técnico usado durante la presentación. Esta slide es para que todos en el auditorio tengan claro las siglas.\n\nSDN, NSX, DFW, NV, SDDC, VCF, VM, vNIC, VXLAN, N-VDS, VCP, IaC." },
+  { title: "Conclusiones", notes: "Tres pilares del cierre:\n1. NSX transforma la red en código.\n2. La microsegmentación resuelve el problema del tráfico Este-Oeste.\n3. Zero Trust con NSX es una implementación real, en producción, en miles de empresas.\n\nPregunta de cierre: '¿puede su empresa permitirse no tener microsegmentación?'\n\nPausa natural aquí. Abrir espacio para preguntas del auditorio." }
 ];
 
-const TOTAL = SLIDES.length;
 let current = 0;
-let notesPanelOpen = false;
-let sidebarOpen = true;
+const total = SLIDES.length;
 
 const slides = document.querySelectorAll('.slide');
 const thumbs = document.querySelectorAll('.thumb');
-const counter = document.getElementById('slide-counter');
-const titleBar = document.getElementById('slide-title');
+const titleEl = document.getElementById('slide-title');
+const counterEl = document.getElementById('slide-counter');
 const progressFill = document.getElementById('progress-fill');
 const notesContent = document.getElementById('notes-content');
 const notesPanel = document.getElementById('notes-panel');
-const sidebar = document.getElementById('sidebar');
-const app = document.getElementById('app');
 
-function goTo(idx) {
-  if (idx < 0 || idx >= TOTAL) return;
+function goTo(n) {
+  if (n < 0 || n >= total) return;
   slides[current].classList.remove('active');
   thumbs[current].classList.remove('active');
-  current = idx;
+  current = n;
   slides[current].classList.add('active');
   thumbs[current].classList.add('active');
-  thumbs[current].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  counter.textContent = (current + 1) + ' / ' + TOTAL;
-  titleBar.textContent = SLIDES[current].title;
-  progressFill.style.width = ((current + 1) / TOTAL * 100) + '%';
+  thumbs[current].scrollIntoView({ block: 'nearest' });
+  titleEl.textContent = SLIDES[current].title;
+  counterEl.textContent = (current + 1) + ' / ' + total;
+  progressFill.style.width = ((current + 1) / total * 100) + '%';
   notesContent.textContent = SLIDES[current].notes;
 }
 
 document.getElementById('btn-prev').addEventListener('click', () => goTo(current - 1));
 document.getElementById('btn-next').addEventListener('click', () => goTo(current + 1));
-thumbs.forEach((t, i) => t.addEventListener('click', () => goTo(i)));
 
-document.getElementById('btn-notes').addEventListener('click', () => {
-  notesPanelOpen = !notesPanelOpen;
-  notesPanel.classList.toggle('collapsed', !notesPanelOpen);
+thumbs.forEach(t => t.addEventListener('click', () => goTo(+t.dataset.slide)));
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
+  if (e.key === 'Home') goTo(0);
+  if (e.key === 'End') goTo(total - 1);
 });
 
 document.getElementById('btn-sidebar').addEventListener('click', () => {
-  sidebarOpen = !sidebarOpen;
-  sidebar.classList.toggle('collapsed', !sidebarOpen);
+  document.getElementById('sidebar').classList.toggle('collapsed');
+});
+
+document.getElementById('btn-notes').addEventListener('click', () => {
+  notesPanel.classList.toggle('collapsed');
 });
 
 document.getElementById('btn-fs').addEventListener('click', () => {
+  const app = document.getElementById('app');
   if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(() => {});
-    app.classList.add('fullscreen');
+    app.requestFullscreen && app.requestFullscreen();
   } else {
-    document.exitFullscreen();
-    app.classList.remove('fullscreen');
+    document.exitFullscreen && document.exitFullscreen();
   }
 });
 
 document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement) app.classList.remove('fullscreen');
+  document.getElementById('app').classList.toggle('fullscreen', !!document.fullscreenElement);
 });
 
-document.addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
-  if (e.key === 'f' || e.key === 'F') document.getElementById('btn-fs').click();
-  if (e.key === 'n' || e.key === 'N') document.getElementById('btn-notes').click();
-  if (e.key === 'Home') goTo(0);
-  if (e.key === 'End') goTo(TOTAL - 1);
-});
-
+// init
 goTo(0);
 </script>
 </body>
