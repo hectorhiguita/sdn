@@ -633,50 +633,116 @@ p.body{font-size:clamp(11px,1.3vw,15px);color:var(--text2);line-height:1.65}
     </div>
 
     <!-- SLIDE 17 · APP 3 CAPAS -->
-    <div class="slide">
-      <div class="slide-inner pad-sm">
+    <div class="slide" id="slide17">
+      <div class="slide-inner pad-sm" style="padding-top:18px;padding-bottom:12px">
         <div class="slide-tag green">Arquitectura de Referencia</div>
-        <h2 class="title" style="margin-bottom:14px">Aplicación de 3 Capas — Políticas de Microsegmentación</h2>
-        <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:14px">
-          <div style="text-align:center;padding:10px 14px;background:rgba(6,182,212,.1);border:1px solid rgba(6,182,212,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px)">
-            <div style="font-weight:700;color:var(--accent2)">🌐 Internet</div>
-            <div style="font-size:10px;color:var(--text3)">Usuario</div>
+        <h2 class="title" style="margin-bottom:10px">Aplicación de 3 Capas — Políticas de Microsegmentación</h2>
+
+        <!-- ANIMATION STAGE -->
+        <div id="s17-stage" style="position:relative;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px 24px;margin-bottom:10px;overflow:hidden">
+
+          <!-- NODES ROW -->
+          <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2">
+
+            <!-- Internet / Usuario -->
+            <div class="s17-node" id="s17-internet" style="text-align:center;min-width:72px">
+              <div style="font-size:26px;line-height:1">🌐</div>
+              <div style="font-size:11px;font-weight:700;color:var(--accent2);margin-top:3px">Internet</div>
+              <div style="font-size:9px;color:var(--text3)">Usuario</div>
+            </div>
+
+            <!-- Arrow 1 + DFW label -->
+            <div class="s17-arrow-wrap" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative">
+              <div style="font-size:9px;font-weight:700;color:var(--green)">✓ TCP:443</div>
+              <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--border),var(--accent));border-radius:1px"></div>
+              <div style="font-size:9px;color:var(--text3)">DFW</div>
+            </div>
+
+            <!-- Web Tier -->
+            <div class="s17-node" id="s17-web" style="text-align:center;min-width:80px;padding:8px 10px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.35);border-radius:8px">
+              <div style="font-size:20px;line-height:1">🖥️</div>
+              <div style="font-size:11px;font-weight:700;color:var(--accent);margin-top:3px">Web Tier</div>
+              <div style="font-size:9px;color:var(--text3)">Nginx / Apache</div>
+            </div>
+
+            <!-- Arrow 2 + DFW label -->
+            <div class="s17-arrow-wrap" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative" id="s17-arrow2-wrap">
+              <div style="font-size:9px;font-weight:700;color:var(--green)" id="s17-arrow2-label">✓ TCP:8080</div>
+              <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--border),var(--accent3));border-radius:1px" id="s17-arrow2-line"></div>
+              <div style="font-size:9px;color:var(--text3)">DFW 🛡</div>
+            </div>
+
+            <!-- App Tier -->
+            <div class="s17-node" id="s17-app" style="text-align:center;min-width:80px;padding:8px 10px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.35);border-radius:8px">
+              <div style="font-size:20px;line-height:1">⚙️</div>
+              <div style="font-size:11px;font-weight:700;color:var(--accent3);margin-top:3px">App Tier</div>
+              <div style="font-size:9px;color:var(--text3)">Business Logic</div>
+            </div>
+
+            <!-- Arrow 3 + DFW label -->
+            <div class="s17-arrow-wrap" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative">
+              <div style="font-size:9px;font-weight:700;color:var(--green)">✓ TCP:5432</div>
+              <div style="width:100%;height:2px;background:linear-gradient(90deg,var(--border),var(--green));border-radius:1px"></div>
+              <div style="font-size:9px;color:var(--text3)">DFW 🛡</div>
+            </div>
+
+            <!-- DB Tier -->
+            <div class="s17-node" id="s17-db" style="text-align:center;min-width:80px;padding:8px 10px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.35);border-radius:8px">
+              <div style="font-size:20px;line-height:1">🗄️</div>
+              <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:3px">DB Tier</div>
+              <div style="font-size:9px;color:var(--text3)">PostgreSQL</div>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:center;padding:0 8px">
-            <div style="font-size:10px;color:var(--green);font-weight:700">✓ TCP:443</div>
-            <div style="color:var(--text3)">→</div>
-            <div style="font-size:9px;color:var(--text3)">DFW</div>
-          </div>
-          <div style="text-align:center;padding:10px 14px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px)">
-            <div style="font-weight:700;color:var(--accent)">Web Tier</div>
-            <div style="font-size:10px;color:var(--text3)">Nginx / Apache</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;padding:0 8px">
-            <div style="font-size:10px;color:var(--green);font-weight:700">✓ TCP:8080</div>
-            <div style="color:var(--text3)">→</div>
-            <div style="font-size:9px;color:var(--text3)">DFW</div>
-          </div>
-          <div style="text-align:center;padding:10px 14px;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px)">
-            <div style="font-weight:700;color:var(--accent3)">App Tier</div>
-            <div style="font-size:10px;color:var(--text3)">Business Logic</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;padding:0 8px">
-            <div style="font-size:10px;color:var(--green);font-weight:700">✓ TCP:5432</div>
-            <div style="color:var(--text3)">→</div>
-            <div style="font-size:9px;color:var(--text3)">DFW</div>
-          </div>
-          <div style="text-align:center;padding:10px 14px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px)">
-            <div style="font-weight:700;color:var(--green)">DB Tier</div>
-            <div style="font-size:10px;color:var(--text3)">PostgreSQL</div>
+
+          <!-- INFECTED PACKET (animated) -->
+          <div id="s17-packet" style="
+            position:absolute;
+            top:50%;transform:translateY(-50%);
+            left:0;
+            font-size:22px;line-height:1;
+            z-index:10;
+            pointer-events:none;
+            opacity:0;
+            transition:left .6s cubic-bezier(.4,0,.2,1), opacity .3s;
+            filter:drop-shadow(0 0 6px rgba(239,68,68,.8));
+          ">☠️📨</div>
+
+          <!-- BLOCK FLASH overlay -->
+          <div id="s17-block" style="
+            position:absolute;inset:0;
+            background:rgba(239,68,68,.0);
+            border-radius:10px;
+            z-index:5;
+            pointer-events:none;
+            display:flex;align-items:center;justify-content:center;
+            opacity:0;transition:opacity .2s;
+          ">
+            <div style="font-size:clamp(18px,2.5vw,28px);font-weight:900;color:var(--red);text-shadow:0 0 20px rgba(239,68,68,.9);letter-spacing:.05em">
+              🚫 BLOQUEADO — DFW DENY
+            </div>
           </div>
         </div>
-        <div style="padding:10px 16px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:clamp(10px,1.1vw,13px);margin-bottom:10px">
-          <strong style="color:var(--red)">✕ Web→DB bloqueado</strong> — Escenario de ataque: si el Web Tier es comprometido, el atacante intenta llegar directamente a DB Tier saltando App Tier. El DFW deniega la conexión porque no existe una política que la autorice.
-        </div>
-        <div class="grid-3" style="font-size:clamp(9px,1vw,12px)">
-          <div class="card green-border"><div class="card-title">Principio aplicado</div><div class="card-body">Mínimo privilegio: cada capa solo habla con la siguiente, nunca con capas no adyacentes.</div></div>
-          <div class="card accent-border"><div class="card-title">Resultado</div><div class="card-body">Compromiso del Web Tier no implica acceso a la base de datos ni a datos sensibles.</div></div>
-          <div class="card purple-border"><div class="card-title">Diferenciador clave</div><div class="card-body">No importa que estén en la misma VLAN. Cada VM está protegida individualmente por el DFW.</div></div>
+
+        <!-- STATUS BAR -->
+        <div id="s17-status" style="font-size:clamp(9px,1vw,12px);color:var(--text3);text-align:center;min-height:16px;margin-bottom:8px;transition:color .3s"></div>
+
+        <!-- CONTROLS + INFO ROW -->
+        <div style="display:flex;align-items:center;gap:10px">
+          <button id="s17-btn" style="
+            background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);color:var(--red);
+            padding:6px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;
+            font-family:var(--font);white-space:nowrap;flex-shrink:0;transition:background .15s;
+          ">▶ Simular ataque</button>
+          <div style="display:flex;gap:8px;flex:1">
+            <div class="card" style="flex:1;padding:8px 10px;border-left:3px solid var(--red)">
+              <div style="font-size:10px;font-weight:700;color:var(--red);margin-bottom:2px">Escenario</div>
+              <div style="font-size:clamp(8px,.9vw,11px);color:var(--text2)">Web Tier comprometido intenta llegar a DB Tier directamente, saltando App Tier.</div>
+            </div>
+            <div class="card" style="flex:1;padding:8px 10px;border-left:3px solid var(--green)">
+              <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:2px">Resultado</div>
+              <div style="font-size:clamp(8px,.9vw,11px);color:var(--text2)">El DFW deniega el paquete en la vNIC del Web Tier. No existe regla Web→DB.</div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="slide-footer"><span>Aplicación de 3 Capas — Microsegmentación</span><span class="exp-badge exp3">EXP 03</span></div>
@@ -887,6 +953,114 @@ document.addEventListener('fullscreenchange', () => {
 
 // init
 goTo(0);
+
+// ── SLIDE 17 PACKET ANIMATION ──────────────────────────────────────────────
+(function(){
+  const btn    = document.getElementById('s17-btn');
+  const packet = document.getElementById('s17-packet');
+  const block  = document.getElementById('s17-block');
+  const status = document.getElementById('s17-status');
+  const stage  = document.getElementById('s17-stage');
+  const arrow2line  = document.getElementById('s17-arrow2-line');
+  const arrow2label = document.getElementById('s17-arrow2-label');
+  const webNode = document.getElementById('s17-web');
+
+  if (!btn) return;
+
+  let running = false;
+
+  function getNodeCenter(el) {
+    const sr = stage.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return er.left - sr.left + er.width / 2;
+  }
+
+  function setStatus(msg, color) {
+    status.textContent = msg;
+    status.style.color = color || 'var(--text3)';
+  }
+
+  function resetVisuals() {
+    arrow2line.style.background  = 'linear-gradient(90deg,var(--border),var(--accent3))';
+    arrow2label.textContent      = '✓ TCP:8080';
+    arrow2label.style.color      = 'var(--green)';
+    webNode.style.borderColor    = 'rgba(59,130,246,.35)';
+    webNode.style.background     = 'rgba(59,130,246,.1)';
+    block.style.opacity          = '0';
+    block.style.background       = 'rgba(239,68,68,.0)';
+    packet.style.opacity         = '0';
+    packet.style.transition      = 'left .6s cubic-bezier(.4,0,.2,1), opacity .3s';
+  }
+
+  async function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  async function animate() {
+    if (running) return;
+    running = true;
+    btn.disabled = true;
+    btn.textContent = '⏳ Simulando…';
+
+    resetVisuals();
+    await sleep(100);
+
+    const stageW   = stage.getBoundingClientRect().width;
+    const pktW     = 36; // approx packet emoji width
+
+    // Phase 1 — packet appears at Internet node
+    const xInternet = getNodeCenter(document.getElementById('s17-internet')) - pktW/2;
+    packet.style.left    = xInternet + 'px';
+    packet.style.opacity = '1';
+    setStatus('📨 Paquete infectado enviado desde Internet…', 'var(--yellow)');
+    await sleep(400);
+
+    // Phase 2 — travel to Web Tier (allowed, TCP:443)
+    const xWeb = getNodeCenter(webNode) - pktW/2;
+    packet.style.left = xWeb + 'px';
+    setStatus('→ Atraviesa DFW (TCP:443 permitido) — llega a Web Tier…', 'var(--accent2)');
+    await sleep(800);
+
+    // Phase 3 — Web Tier gets infected (red glow)
+    webNode.style.borderColor = 'rgba(239,68,68,.8)';
+    webNode.style.background  = 'rgba(239,68,68,.12)';
+    setStatus('⚠️  Web Tier comprometido — el ransomware intenta moverse lateralmente…', 'var(--yellow)');
+    await sleep(900);
+
+    // Phase 4 — packet tries to cross to App Tier, arrow turns red
+    arrow2line.style.background  = 'linear-gradient(90deg,rgba(239,68,68,.8),rgba(239,68,68,.3))';
+    arrow2label.textContent      = '✕ Puerto no autorizado';
+    arrow2label.style.color      = 'var(--red)';
+
+    const xMid = getNodeCenter(document.getElementById('s17-app')) - pktW/2;
+    // move only halfway
+    const xHalf = xWeb + (xMid - xWeb) * 0.45;
+    packet.style.transition = 'left .5s cubic-bezier(.4,0,.2,1), opacity .3s';
+    packet.style.left = xHalf + 'px';
+    setStatus('→ Intenta cruzar al App Tier… DFW inspeccionando paquete…', 'var(--red)');
+    await sleep(600);
+
+    // Phase 5 — BLOCK
+    packet.style.transition = 'left .15s, opacity .25s';
+    packet.style.opacity    = '0';
+
+    block.style.background = 'rgba(239,68,68,.08)';
+    block.style.opacity    = '1';
+    setStatus('🚫  DFW DENY — No existe regla Web→DB. Movimiento lateral bloqueado.', 'var(--red)');
+    await sleep(1800);
+
+    // Phase 6 — fade block out, restore
+    block.style.opacity = '0';
+    await sleep(400);
+
+    // keep web node red to show it's still infected
+    setStatus('✓ App Tier y DB Tier intactos. Solo Web Tier comprometido.', 'var(--green)');
+
+    btn.disabled    = false;
+    btn.textContent = '↺ Repetir simulación';
+    running = false;
+  }
+
+  btn.addEventListener('click', animate);
+})();
 </script>
 </body>
 </html>
